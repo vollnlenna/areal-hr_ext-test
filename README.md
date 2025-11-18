@@ -1,0 +1,17 @@
+# areal-hr_ext-test
+<div>
+  <h2>Технические характеристики</h2>
+  <p>Используемая ОС - <strong>Ubuntu Desktop 24.04</strong></p>
+  <p>IDE - <strong>Webstorm</strong></p>
+  <p>Язык для разработки интерфейса - <strong>Vue.js</strong></p>
+  <p>Язык для работы с внутренней частью - <strong>NestJS</strong></p>
+</div>
+<div>
+  <h2>Основные git команды в IDE</h2>
+  <p><strong>git init</strong> - инициализация репозитория в директории</p>
+  <p><strong>git add text.txt</strong> - подготавливает файл к сохранению в истории изменений</p>
+  <p><strong>git commit</strong> - фиксирует текущие изменения с комментарием</p>
+  <p><strong>git status</strong> - отображает состояние рабочих файлов</p>
+  <p><strong>git rm text.txt</strong> - удаляет файл из системы контроля версий</p>
+  <p><strong>git reset</strong> - откатывает изменения к предыдущему коммиту</p>
+</div>
