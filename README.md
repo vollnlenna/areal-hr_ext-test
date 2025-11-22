@@ -7,6 +7,10 @@
   <p>Язык для работы с внутренней частью - <strong>NestJS</strong></p>
 </div>
 <div>
+  <h2>База данных</h2>
+  <p>Схема базы данных: <a href="database-schema.drawio">database-schema.drawio</a></p>
+</div>
+<div>
   <h2>Основные git команды в IDE</h2>
   <p><strong>git init</strong> - инициализация репозитория в директории</p>
   <p><strong>git add text.txt</strong> - подготавливает файл к сохранению в истории изменений</p>
@@ -15,3 +19,4 @@
   <p><strong>git rm text.txt</strong> - удаляет файл из системы контроля версий</p>
   <p><strong>git reset</strong> - откатывает изменения к предыдущему коммиту</p>
 </div>
+
