@@ -6,8 +6,10 @@ import {
   Delete,
   Param,
   Body,
+  BadRequestException,
 } from '@nestjs/common';
 import { PositionsService, Position } from './positions.service';
+import { validatePosition } from '../validation';
 
 @Controller('positions')
 export class PositionsController {
@@ -24,12 +26,10 @@ export class PositionsController {
   }
 
   @Post()
-  async create(
-    @Body()
-    data: {
-      name: string;
-    },
-  ): Promise<Position> {
+  async create(@Body() data: { name: string }): Promise<Position> {
+    const { error } = validatePosition.validate(data);
+    if (error) throw new BadRequestException(error.message);
+
     return this.positionsService.create(data);
   }
 
@@ -39,6 +39,9 @@ export class PositionsController {
     @Body()
     data: { name?: string },
   ): Promise<Position | null> {
+    const { error } = validatePosition.validate(data);
+    if (error) throw new BadRequestException(error.message);
+
     return this.positionsService.update(id, data);
   }
 
