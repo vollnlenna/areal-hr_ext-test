@@ -6,8 +6,10 @@ import {
   Delete,
   Param,
   Body,
+  BadRequestException,
 } from '@nestjs/common';
 import { DepartmentsService, Department } from './departments.service';
+import { validateDepartment } from '../validation';
 
 @Controller('departments')
 export class DepartmentsController {
@@ -33,6 +35,9 @@ export class DepartmentsController {
       comment?: string | null;
     },
   ): Promise<Department> {
+    const { error } = validateDepartment.validate(data);
+    if (error) throw new BadRequestException(error.message);
+
     return this.departmentsService.create(data);
   }
 
@@ -47,6 +52,9 @@ export class DepartmentsController {
       comment?: string | null;
     },
   ): Promise<Department | null> {
+    const { error } = validateDepartment.validate(data);
+    if (error) throw new BadRequestException(error.message);
+
     return this.departmentsService.update(id, data);
   }
 
