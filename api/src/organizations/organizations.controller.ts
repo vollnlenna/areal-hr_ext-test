@@ -6,8 +6,10 @@ import {
   Delete,
   Param,
   Body,
+  BadRequestException,
 } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
+import { validateOrganization } from '../validation';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -31,6 +33,9 @@ export class OrganizationsController {
       comment?: string | null;
     },
   ) {
+    const { error } = validateOrganization.validate(data);
+    if (error) throw new BadRequestException(error.message);
+
     return this.organizationsService.create(data);
   }
 
@@ -38,11 +43,11 @@ export class OrganizationsController {
   async update(
     @Param('id') id: number,
     @Body()
-    data: {
-      name?: string;
-      comment?: string | null;
-    },
+    data: { name?: string; comment?: string | null },
   ) {
+    const { error } = validateOrganization.validate(data);
+    if (error) throw new BadRequestException(error.message);
+
     return this.organizationsService.update(id, data);
   }
 
