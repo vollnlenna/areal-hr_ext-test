@@ -9,7 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     {
       provide: 'PG_POOL',
       useFactory: (config: ConfigService) => {
-        const port = config.get<number>('POSTGRES_PORT', 5432);
+        const port = config.get<number>('POSTGRES_PORT');
 
         return new Pool({
           user: config.get<string>('POSTGRES_USER'),
