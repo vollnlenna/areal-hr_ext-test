@@ -12,19 +12,19 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  api:
-    build: ./containers/api
-    ports:
-      - "${API_PORT}:3000"
-    depends_on:
-      - postgres
+ # api:
+ #   build: ./containers/api
+ #   ports:
+ #     - "${API_PORT}:3000"
+ #   depends_on:
+ #     - postgres
 
-  app:
-    build: ./containers/app
-    ports:
-      - "${APP_PORT}:3000"
-    depends_on:
-      - api
+ # app:
+ #   build: ./containers/app
+ #   ports:
+ #     - "${APP_PORT}:3000"
+ #   depends_on:
+ #     - api
 
 volumes:
   pgdata:
