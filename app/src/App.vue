@@ -1,11 +1,11 @@
-<script setup lang="ts"></script>
-
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
-</template>
+  <div class="container">
+    <nav>
+      <router-link to="/organizations" class="tab" :class="{ active: $route.path === '/organizations' }">Организации</router-link>
+      <router-link to="/departments" class="tab" :class="{ active: $route.path === '/departments' }">Отделы</router-link>
+      <router-link to="/positions" class="tab" :class="{ active: $route.path === '/positions' }">Должности</router-link>
+    </nav>
 
-<style scoped></style>
+    <router-view />
+  </div>
+</template>
