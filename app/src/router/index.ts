@@ -1,8 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import organizations from '../pages/OrganizationsPage.vue';
+import departments from '../pages/DepartmentsPage.vue';
+import positions from '../pages/PositionsPage.vue';
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [],
-})
+const routes = [
+  { path: '/', redirect: '/organizations' },
+  { path: '/organizations', component: organizations },
+  { path: '/departments', component: departments },
+  { path: '/positions', component: positions },
+];
 
-export default router
+export default createRouter({
+  history: createWebHistory(),
+  routes,
+});
