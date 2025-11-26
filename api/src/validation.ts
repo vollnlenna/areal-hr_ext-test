@@ -21,7 +21,8 @@ export const validateDepartment = Joi.object({
   }),
 
   id_organization: Joi.number().required().messages({
-    'any.required': '‼️ Не выбрана организация',
+    'number.base': '‼️ Не выбрана организация',
+    'any.required': '‼️ Организация обязательна',
   }),
 
   id_parent_department: Joi.number().allow(null).optional(),
