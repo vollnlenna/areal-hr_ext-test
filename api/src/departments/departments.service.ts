@@ -63,11 +63,11 @@ export class DepartmentsService {
       `update departments
        set name = coalesce($2, name),
            id_organization = coalesce($3, id_organization),
-           id_parent_department = coalesce($4, id_parent_department),
+           id_parent_department = $4,
            comment = coalesce($5, comment),
            updated_at = now()
        where id_department = $1
-       returning *`,
+         returning *`,
       [
         id,
         data.name,
