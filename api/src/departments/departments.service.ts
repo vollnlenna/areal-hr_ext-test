@@ -18,14 +18,14 @@ export class DepartmentsService {
 
   async getAll(): Promise<Department[]> {
     const result: QueryResult<Department> = await this.pgPool.query(
-      `select * from departments`,
+      `select * from departments where deleted_at is null`,
     );
     return result.rows;
   }
 
   async getById(id: number): Promise<Department | null> {
     const result: QueryResult<Department> = await this.pgPool.query(
-      `select * from departments where id_department = $1`,
+      `select * from departments where id_department = $1 and deleted_at is null`,
       [id],
     );
     return result.rows[0] ?? null;
@@ -38,8 +38,8 @@ export class DepartmentsService {
     comment?: string | null;
   }): Promise<Department> {
     const result: QueryResult<Department> = await this.pgPool.query(
-      `insert into departments (name, id_organization, id_parent_department, comment, created_at)
-       values ($1, $2, $3, $4, now()) returning *`,
+      `insert into departments (name, id_organization, id_parent_department, comment, created_at, updated_at)
+       values ($1, $2, $3, $4, now(), now()) returning *`,
       [
         data.name,
         data.id_organization,
