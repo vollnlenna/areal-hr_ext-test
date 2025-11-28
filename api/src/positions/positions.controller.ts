@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PositionsService, Position } from './positions.service';
 import { validatePosition } from '../validation';
@@ -17,12 +18,20 @@ export class PositionsController {
 
   @Get()
   async getAll(): Promise<Position[]> {
-    return this.positionsService.getAll();
+    try {
+      return await this.positionsService.getAll();
+    } catch {
+      throw new InternalServerErrorException('Ошибка при получении должностей');
+    }
   }
 
   @Get(':id')
   async getById(@Param('id') id: number): Promise<Position | null> {
-    return this.positionsService.getById(id);
+    try {
+      return await this.positionsService.getById(id);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при получении должности');
+    }
   }
 
   @Post()
@@ -30,7 +39,11 @@ export class PositionsController {
     const { error } = validatePosition.validate(data);
     if (error) throw new BadRequestException(error.message);
 
-    return this.positionsService.create(data);
+    try {
+      return await this.positionsService.create(data);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при создании должности');
+    }
   }
 
   @Patch(':id')
@@ -42,11 +55,19 @@ export class PositionsController {
     const { error } = validatePosition.validate(data);
     if (error) throw new BadRequestException(error.message);
 
-    return this.positionsService.update(id, data);
+    try {
+      return await this.positionsService.update(id, data);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при обновлении должности');
+    }
   }
 
   @Delete(':id')
   async delete(@Param('id') id: number): Promise<Position | null> {
-    return this.positionsService.delete(id);
+    try {
+      return await this.positionsService.delete(id);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при удалении должности');
+    }
   }
 }

@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { validateOrganization } from '../validation';
@@ -17,12 +18,24 @@ export class OrganizationsController {
 
   @Get()
   async getAll() {
-    return this.organizationsService.getAll();
+    try {
+      return await this.organizationsService.getAll();
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при получении организаций',
+      );
+    }
   }
 
   @Get(':id')
   async getById(@Param('id') id: number) {
-    return this.organizationsService.getById(id);
+    try {
+      return await this.organizationsService.getById(id);
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при получении организации',
+      );
+    }
   }
 
   @Post()
@@ -36,7 +49,11 @@ export class OrganizationsController {
     const { error } = validateOrganization.validate(data);
     if (error) throw new BadRequestException(error.message);
 
-    return this.organizationsService.create(data);
+    try {
+      return await this.organizationsService.create(data);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при создании организации');
+    }
   }
 
   @Patch(':id')
@@ -48,11 +65,21 @@ export class OrganizationsController {
     const { error } = validateOrganization.validate(data);
     if (error) throw new BadRequestException(error.message);
 
-    return this.organizationsService.update(id, data);
+    try {
+      return await this.organizationsService.update(id, data);
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при обновлении организации',
+      );
+    }
   }
 
   @Delete(':id')
   async delete(@Param('id') id: number) {
-    return this.organizationsService.delete(id);
+    try {
+      return await this.organizationsService.delete(id);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при удалении организации');
+    }
   }
 }

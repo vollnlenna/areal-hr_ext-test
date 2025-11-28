@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { DepartmentsService, Department } from './departments.service';
 import { validateDepartment } from '../validation';
@@ -17,12 +18,20 @@ export class DepartmentsController {
 
   @Get()
   async getAll(): Promise<Department[]> {
-    return this.departmentsService.getAll();
+    try {
+      return await this.departmentsService.getAll();
+    } catch {
+      throw new InternalServerErrorException('Ошибка при получении отделов');
+    }
   }
 
   @Get(':id')
   async getById(@Param('id') id: number): Promise<Department | null> {
-    return this.departmentsService.getById(id);
+    try {
+      return await this.departmentsService.getById(id);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при получении отдела');
+    }
   }
 
   @Post()
@@ -38,7 +47,11 @@ export class DepartmentsController {
     const { error } = validateDepartment.validate(data);
     if (error) throw new BadRequestException(error.message);
 
-    return this.departmentsService.create(data);
+    try {
+      return await this.departmentsService.create(data);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при создании отдела');
+    }
   }
 
   @Patch(':id')
@@ -55,11 +68,19 @@ export class DepartmentsController {
     const { error } = validateDepartment.validate(data);
     if (error) throw new BadRequestException(error.message);
 
-    return this.departmentsService.update(id, data);
+    try {
+      return await this.departmentsService.update(id, data);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при обновлении отдела');
+    }
   }
 
   @Delete(':id')
   async delete(@Param('id') id: number): Promise<Department | null> {
-    return this.departmentsService.delete(id);
+    try {
+      return await this.departmentsService.delete(id);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при удалении отдела');
+    }
   }
 }
