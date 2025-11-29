@@ -115,19 +115,24 @@ select::-ms-expand { display: none; }
 
 .card-actions { display:flex; gap:8px; justify-content: center; margin-top: auto; }
 
-.btn-edit, .btn-delete, .btn-save, .btn-cancel, .btn-add {
+.btn-edit, .btn-delete, .btn-save, .btn-cancel, .btn-add, .btn-restore {
   border-radius: 8px; padding: 9px; border: none; cursor: pointer; font-size: 13px; box-shadow: none;
 }
-.btn-add { background: #1B2234; color: #fff; width: 100px; }
+.btn-add, .btn-restore { background: #1B2234; color: #fff; width: 100px; }
 .btn-edit { background: #414049; color: #fff; }
 .btn-delete { background: #64646D; color: #fff; }
 .btn-edit:disabled, .btn-delete:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
 .btn-save { background: #1B2234; color: #fff; }
 .btn-cancel { background: #A49B95; color: #000; }
+.btn-restore { background: #1B2234; color: #fff; width: 120px; margin-top: 10px; }
 
 .deleted-overlay {
   position: absolute; inset: 0; display:flex; align-items:center; justify-content:center;
-  background: rgba(255, 255, 255, 0.9); text-align:center; font-size: 14px; color: #222; pointer-events: none;
+  background: rgba(255, 255, 255, 0.8); text-align:center; font-size: 14px; color: #222; pointer-events: none;
+}
+
+.deleted-content {
+  pointer-events: auto;
 }
 
 .modal-backdrop {
@@ -147,4 +152,13 @@ select::-ms-expand { display: none; }
 
 .error-box {
   border: 1px solid red; padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; color: red; font-size: 13px;
+}
+
+.search-input {
+  margin-bottom: 12px;
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid #aaa;
 }
