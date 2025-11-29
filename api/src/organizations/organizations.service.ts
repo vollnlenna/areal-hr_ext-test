@@ -16,7 +16,7 @@ export class OrganizationsService {
 
   async getAll(): Promise<Organization[]> {
     const result: QueryResult<Organization> = await this.pgPool.query(
-      `select * from organizations where deleted_at is null`,
+      `select * from organizations`,
     );
     return result.rows;
   }
@@ -70,6 +70,17 @@ export class OrganizationsService {
       where id_organization = $1
       returning *
       `,
+      [id],
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async restore(id: number): Promise<Organization | null> {
+    const result: QueryResult<Organization> = await this.pgPool.query(
+      `update organizations
+       set deleted_at = null
+       where id_organization = $1 and deleted_at is not null
+       returning *`,
       [id],
     );
     return result.rows[0] ?? null;

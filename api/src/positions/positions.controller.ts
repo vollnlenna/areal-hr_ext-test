@@ -70,4 +70,15 @@ export class PositionsController {
       throw new InternalServerErrorException('Ошибка при удалении должности');
     }
   }
+
+  @Patch('restore/:id')
+  async restore(@Param('id') id: number) {
+    try {
+      return await this.positionsService.restore(id);
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при восстановлении должности',
+      );
+    }
+  }
 }

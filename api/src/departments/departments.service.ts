@@ -18,7 +18,7 @@ export class DepartmentsService {
 
   async getAll(): Promise<Department[]> {
     const result: QueryResult<Department> = await this.pgPool.query(
-      `select * from departments where deleted_at is null`,
+      `select * from departments`,
     );
     return result.rows;
   }
@@ -82,8 +82,19 @@ export class DepartmentsService {
   async delete(id: number): Promise<Department | null> {
     const result: QueryResult<Department> = await this.pgPool.query(
       `update departments
-       set deleted_at = NOW()
+       set deleted_at = now()
        where id_department = $1
+         returning *`,
+      [id],
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async restore(id: number): Promise<Department | null> {
+    const result: QueryResult<Department> = await this.pgPool.query(
+      `update departments
+       set deleted_at = null
+       where id_department = $1 and deleted_at is not null
        returning *`,
       [id],
     );

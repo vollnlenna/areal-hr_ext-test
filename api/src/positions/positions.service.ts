@@ -15,7 +15,7 @@ export class PositionsService {
 
   async getAll(): Promise<Position[]> {
     const result: QueryResult<Position> = await this.pgPool.query(
-      `select * from positions where deleted_at is null`,
+      `select * from positions`,
     );
     return result.rows;
   }
@@ -54,6 +54,17 @@ export class PositionsService {
       `update positions
        set deleted_at = now()
        where id_position = $1
+       returning *`,
+      [id],
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async restore(id: number): Promise<Position | null> {
+    const result: QueryResult<Position> = await this.pgPool.query(
+      `update positions
+       set deleted_at = null
+       where id_position = $1 and deleted_at is not null
        returning *`,
       [id],
     );

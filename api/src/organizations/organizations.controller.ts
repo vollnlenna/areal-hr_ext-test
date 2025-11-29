@@ -82,4 +82,15 @@ export class OrganizationsController {
       throw new InternalServerErrorException('Ошибка при удалении организации');
     }
   }
+
+  @Patch('restore/:id')
+  async restore(@Param('id') id: number) {
+    try {
+      return await this.organizationsService.restore(id);
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при восстановлении организации',
+      );
+    }
+  }
 }

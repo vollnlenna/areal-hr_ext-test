@@ -83,4 +83,15 @@ export class DepartmentsController {
       throw new InternalServerErrorException('Ошибка при удалении отдела');
     }
   }
+
+  @Patch('restore/:id')
+  async restore(@Param('id') id: number): Promise<Department | null> {
+    try {
+      return await this.departmentsService.restore(id);
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при восстановлении отдела',
+      );
+    }
+  }
 }
