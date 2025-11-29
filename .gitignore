@@ -43,6 +43,3 @@ build/
 
 # Docker
 .docker/
-
-package-lock.json
-package.json
