@@ -1,70 +1,62 @@
 <template>
   <div class="page">
+    <input
+      v-model="searchQuery"
+      type="text"
+      placeholder="Поиск по названию..."
+      class="search-input"
+    />
+
     <div class="page-controls">
-      <button class="btn-add" @click="openAdd">Добавить</button>
+      <button class="btn-add" @click="openForm()">Добавить</button>
     </div>
 
     <div class="cards-wrap">
       <OrganizationCard
-        v-for="row in list"
+        v-for="row in filtered"
         :key="row.id_organization"
         :row="row"
-        @edit="openEdit"
-        @delete="doDelete"
+        @edit="openForm"
+        @delete="deleteRow"
+        @restore="restoreRow"
       />
     </div>
 
     <OrgModal
-      :visible="modalVisible"
-      :payload="editingPayload"
-      :on-save="onModalSave"
-      @cancel="closeModal"
+      :visible="form.visible"
+      :payload="form.current"
+      :on-save="saveForm"
+      @cancel="closeForm"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import http from '../api/http'
 import OrganizationCard from '../components/OrganizationCard.vue'
 import OrgModal from '../components/OrgModal.vue'
 
-type Org = {
-  id_organization: number
-  name: string
-  comment?: string | null
-  deleted_at?: string | null
-}
+type Org = { id_organization: number; name: string; comment?: string | null; deleted_at?: string | null }
 
 const list = ref<Org[]>([])
-const modalVisible = ref(false)
-const editingPayload = ref<Org | null>(null)
+const searchQuery = ref('')
 
-async function load() {
+const filtered = computed(() =>
+  list.value.filter(x => x.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+)
+
+async function loadList() {
   const res = await http.get<Org[]>('/organizations')
   list.value = res.data
 }
+onMounted(loadList)
 
-function openAdd() {
-  editingPayload.value = null
-  modalVisible.value = true
-}
+const form = reactive<{ visible: boolean; current: Org | null }>({ visible: false, current: null })
+function openForm(row?: Org) { form.current = row ?? null; form.visible = true }
+function closeForm() { form.visible = false; form.current = null }
 
-function openEdit(row: Org) {
-  editingPayload.value = row
-  modalVisible.value = true
-}
-
-function closeModal() {
-  modalVisible.value = false
-  editingPayload.value = null
-}
-
-async function onModalSave(payload: {
-  id_organization?: number | null
-  name?: string
-  comment?: string | null
-}) {
+async function saveForm(payload: { id_organization?: number | null; name?: string; comment?: string | null }) {
   if (payload.id_organization) {
     await http.patch(`/organizations/${payload.id_organization}`, {
       name: payload.name,
@@ -76,14 +68,17 @@ async function onModalSave(payload: {
       comment: payload.comment ?? null
     })
   }
-  await load()
-  closeModal()
+  await loadList()
+  closeForm()
 }
 
-async function doDelete(row: Org) {
+async function deleteRow(row: Org) {
   await http.delete(`/organizations/${row.id_organization}`)
-  await load()
+  await loadList()
 }
 
-onMounted(load)
+async function restoreRow(row: Org) {
+  await http.patch(`/organizations/restore/${row.id_organization}`)
+  await loadList()
+}
 </script>

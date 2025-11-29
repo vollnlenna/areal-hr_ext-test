@@ -1,15 +1,15 @@
 <template>
   <div v-if="visible" class="modal-backdrop" @click.self="onCancel">
     <div class="modal">
-      <h3>{{ local.id !== null ? 'Изменить должность' : 'Добавить должность' }}</h3>
+      <h3>{{ form.id ? 'Изменить должность' : 'Добавить должность' }}</h3>
 
-      <div v-if="errorMessage" class="error-box">{{ errorMessage }}</div>
+      <div v-if="error" class="error-box">{{ error }}</div>
 
       <label>Название</label>
-      <input v-model="local.name" />
+      <input v-model="form.name" />
 
       <div class="modal-actions">
-        <button class="btn-save" @click="handleSave">Сохранить</button>
+        <button class="btn-save" @click="submit">Сохранить</button>
         <button class="btn-cancel" @click="onCancel">Отмена</button>
       </div>
     </div>
@@ -17,45 +17,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { isAxiosError } from 'axios'
 
 type SavePayload = { id_position?: number | null; name?: string }
 
-const errorMessage = ref('')
+const props = defineProps<{ visible: boolean; payload: SavePayload | null; onSave: (d: SavePayload) => Promise<void> }>()
+const emit = defineEmits<{ (e: 'cancel'): void }>()
 
-const props = defineProps<{
-  visible: boolean
-  payload: SavePayload | null
-  onSave: (data: SavePayload) => Promise<void>
-}>()
+const form = reactive({ id: null as number | null, name: '' })
+const error = ref('')
 
-const emits = defineEmits<{ (e: 'cancel'): void }>()
+watch(() => props.payload, (p) => {
+  error.value = ''
+  form.id = p?.id_position ?? null
+  form.name = p?.name ?? ''
+}, { immediate: true })
 
-const local = reactive({ id: null as number | null, name: '' })
-
-function sync(p: SavePayload | null) {
-  errorMessage.value = ''
-  local.id = p?.id_position ?? null
-  local.name = p?.name ?? ''
-}
-watch(() => props.payload, sync, { immediate: true })
-
-async function handleSave() {
-  errorMessage.value = ''
+async function submit() {
+  error.value = ''
   try {
-    await props.onSave({ id_position: local.id, name: local.name })
-  } catch (err) {
-    if (isAxiosError(err)) {
-      const msg = err.response?.data?.message ?? 'Ошибка сохранения'
-      errorMessage.value = Array.isArray(msg) ? msg.join(', ') : msg
-    } else {
-      errorMessage.value = 'Неизвестная ошибка'
-    }
+    await props.onSave({ id_position: form.id, name: form.name })
+  } catch (e) {
+    if (isAxiosError(e)) {
+      const msg = e.response?.data?.message ?? 'Ошибка сохранения'
+      error.value = Array.isArray(msg) ? msg.join(', ') : msg
+    } else error.value = 'Неизвестная ошибка'
   }
 }
-
-function onCancel() {
-  emits('cancel')
-}
+function onCancel() { emit('cancel') }
 </script>

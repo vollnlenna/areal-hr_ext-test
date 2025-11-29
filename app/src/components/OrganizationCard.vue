@@ -35,7 +35,10 @@
     </div>
 
     <div v-if="row.deleted_at" class="deleted-overlay">
-      <div>Удалено: {{ formatDate(row.deleted_at) }}</div>
+      <div class="deleted-content">
+        <div>Удалено: {{ formatDate(row.deleted_at) }}</div>
+        <button class="btn-restore" @click="onRestore">Восстановить</button>
+      </div>
     </div>
   </div>
 </template>
@@ -53,11 +56,17 @@ const props = defineProps<{ row: OrgRow }>()
 const emit = defineEmits<{
   (e: 'edit', row: OrgRow): void
   (e: 'delete', row: OrgRow): void
+  (e: 'restore', row: OrgRow): void
 }>()
 
 function onDelete() {
   if (!confirm('Вы точно хотите удалить эту организацию?')) return
   emit('delete', props.row)
+}
+
+function onRestore() {
+  if (!confirm('Восстановить эту организацию?')) return
+  emit('restore', props.row)
 }
 
 function formatDate(val: unknown) {

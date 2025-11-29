@@ -1,39 +1,30 @@
 <template>
   <div v-if="visible" class="modal-backdrop" @click.self="onCancel">
     <div class="modal">
-      <h3>{{ local.id ? 'Изменить отдел' : 'Добавить отдел' }}</h3>
+      <h3>{{ form.id ? 'Изменить отдел' : 'Добавить отдел' }}</h3>
 
-      <div v-if="errorMessage" class="error-box">{{ errorMessage }}</div>
+      <div v-if="error" class="error-box">{{ error }}</div>
 
       <label>Название</label>
-      <input v-model="local.name" />
+      <input v-model="form.name" />
 
       <label>Организация</label>
-      <select v-model="local.organizationId">
+      <select v-model="form.organizationId">
         <option :value="null" disabled>Выберите организацию</option>
-        <option v-for="org in orgList" :key="org.id_organization" :value="org.id_organization">
-          {{ org.name }}
-        </option>
-      </select>
-
-      <label>Вышестоящий отдел</label>
-      <select v-model="local.parentDeptId">
-        <option :value="null">Нет</option>
         <option
-          v-for="d in deptList"
-          :key="d.id_department"
-          :value="d.id_department"
-          :disabled="d.id_department === local.id"
+          v-for="o in activeOrganizations"
+          :key="o.id_organization"
+          :value="o.id_organization"
         >
-          {{ d.name }}
+          {{ o.name }}
         </option>
       </select>
 
       <label>Комментарий</label>
-      <textarea v-model="local.comment" rows="4" />
+      <textarea v-model="form.comment" rows="4" />
 
       <div class="modal-actions">
-        <button class="btn-save" @click="handleSave">Сохранить</button>
+        <button class="btn-save" @click="submit">Сохранить</button>
         <button class="btn-cancel" @click="onCancel">Отмена</button>
       </div>
     </div>
@@ -41,80 +32,57 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { reactive, ref, watch, computed } from 'vue'
 import { isAxiosError } from 'axios'
 
-const errorMessage = ref('')
-
-type Save = {
-  id_department?: number | null
-  name?: string
-  organizationId?: number | null
-  parentDeptId?: number | null
-  comment?: string | null
-}
-
-type DeptPayload = {
-  id_department: number
-  name: string
-  id_organization: number
-  id_parent_department?: number | null
-  comment?: string | null
-}
-
-type OrgOption = { id_organization: number; name: string }
-type DeptOption = { id_department: number; name: string }
+type Save = { id_department?: number | null; name?: string; organizationId?: number | null; comment?: string | null }
+type DeptPayload = { id_department: number; name: string; id_organization: number; id_parent_department?: number | null; comment?: string | null }
+type OrgOption = { id_organization: number; name: string; deleted_at?: string | null }
 
 const props = defineProps<{
   visible: boolean
   payload: DeptPayload | null
   onSave: (data: Save) => Promise<void>
   orgList: OrgOption[]
-  deptList: DeptOption[]
 }>()
 
-const emit = defineEmits(['cancel'])
+const emit = defineEmits<{ (e: 'cancel'): void }>()
 
-const local = reactive({
+const form = reactive({
   id: null as number | null,
   name: '',
   organizationId: null as number | null,
-  parentDeptId: null as number | null,
   comment: null as string | null
 })
+const error = ref('')
 
-function syncFromPayload(p: DeptPayload | null) {
-  errorMessage.value = ''
-  local.id = p?.id_department ?? null
-  local.name = p?.name ?? ''
-  local.organizationId = p?.id_organization ?? null
-  local.parentDeptId = p?.id_parent_department ?? null
-  local.comment = p?.comment ?? null
-}
+const activeOrganizations = computed(() => props.orgList.filter(org => !org.deleted_at))
 
-watch(() => props.payload, syncFromPayload, { immediate: true })
+watch(() => props.payload, (p) => {
+  error.value = ''
+  form.id = p?.id_department ?? null
+  form.name = p?.name ?? ''
+  form.organizationId = p?.id_organization ?? null
+  form.comment = p?.comment ?? null
+}, { immediate: true })
 
-async function handleSave() {
-  errorMessage.value = ''
+async function submit() {
+  error.value = ''
   try {
     await props.onSave({
-      id_department: local.id,
-      name: local.name,
-      organizationId: local.organizationId,
-      parentDeptId: local.parentDeptId,
-      comment: local.comment
+      id_department: form.id,
+      name: form.name,
+      organizationId: form.organizationId,
+      comment: form.comment
     })
-  } catch (err) {
-    if (isAxiosError(err)) {
-      const msg = err.response?.data?.message ?? 'Ошибка сохранения'
-      errorMessage.value = Array.isArray(msg) ? msg.join(', ') : msg
+  } catch (e) {
+    if (isAxiosError(e)) {
+      const msg = e.response?.data?.message ?? 'Ошибка сохранения'
+      error.value = Array.isArray(msg) ? msg.join(', ') : msg
     } else {
-      errorMessage.value = 'Неизвестная ошибка'
+      error.value = 'Неизвестная ошибка'
     }
   }
 }
-
-function onCancel() {
-  emit('cancel')
-}
+function onCancel() { emit('cancel') }
 </script>

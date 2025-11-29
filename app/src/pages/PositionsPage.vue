@@ -1,73 +1,78 @@
 <template>
   <div class="page">
+    <input
+      v-model="searchQuery"
+      type="text"
+      placeholder="Поиск по названию..."
+      class="search-input"
+    />
+
     <div class="page-controls">
-      <button class="btn-add" @click="open()">Добавить</button>
+      <button class="btn-add" @click="openForm()">Добавить</button>
     </div>
 
     <div class="cards-wrap">
       <PositionCard
-        v-for="row in list"
+        v-for="row in filtered"
         :key="row.id_position"
         :row="row"
-        @edit="open"
-        @delete="doDelete"
+        @edit="openForm"
+        @delete="deleteRow"
+        @restore="restoreRow"
       />
     </div>
 
     <PositionModal
-      :visible="modalVisible"
-      :payload="editingPayload"
-      :on-save="onModalSave"
-      @cancel="closeModal"
+      :visible="form.visible"
+      :payload="form.current"
+      :on-save="saveForm"
+      @cancel="closeForm"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import http from '../api/http'
 import PositionCard from '../components/PositionCard.vue'
 import PositionModal from '../components/PositionModal.vue'
 
-type Position = {
-  id_position: number
-  name: string
-  deleted_at?: string | null
-}
+type Position = { id_position: number; name: string; deleted_at?: string | null }
 
 const list = ref<Position[]>([])
-const modalVisible = ref(false)
-const editingPayload = ref<Position | null>(null)
+const searchQuery = ref('')
 
-async function load() {
+const filtered = computed(() =>
+  list.value.filter(x => x.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+)
+
+async function loadList() {
   const res = await http.get<Position[]>('/positions')
   list.value = res.data
 }
+onMounted(loadList)
 
-function open(row?: Position) {
-  editingPayload.value = row ?? null
-  modalVisible.value = true
-}
+const form = reactive<{ visible: boolean; current: Position | null }>({ visible: false, current: null })
+function openForm(row?: Position) { form.current = row ?? null; form.visible = true }
+function closeForm() { form.visible = false; form.current = null }
 
-function closeModal() {
-  modalVisible.value = false
-  editingPayload.value = null
-}
-
-async function onModalSave(payload: { id_position?: number | null; name?: string }) {
+async function saveForm(payload: { id_position?: number | null; name?: string }) {
   if (payload.id_position) {
     await http.patch(`/positions/${payload.id_position}`, { name: payload.name })
   } else {
     await http.post('/positions', { name: payload.name })
   }
-  await load()
-  closeModal()
+  await loadList()
+  closeForm()
 }
 
-async function doDelete(row: Position) {
+async function deleteRow(row: Position) {
   await http.delete(`/positions/${row.id_position}`)
-  await load()
+  await loadList()
 }
 
-onMounted(load)
+async function restoreRow(row: Position) {
+  await http.patch(`/positions/restore/${row.id_position}`)
+  await loadList()
+}
 </script>
