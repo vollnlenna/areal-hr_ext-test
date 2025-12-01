@@ -25,6 +25,17 @@ export class DepartmentsController {
     }
   }
 
+  @Get('deleted')
+  async getDeleted(): Promise<Department[]> {
+    try {
+      return await this.departmentsService.getDeleted();
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при получении удаленных отделов',
+      );
+    }
+  }
+
   @Get(':id')
   async getById(@Param('id') id: number): Promise<Department | null> {
     try {

@@ -27,6 +27,17 @@ export class EmployeesController {
     }
   }
 
+  @Get('deleted')
+  async getDeleted(): Promise<Employee[]> {
+    try {
+      return await this.employeesService.getDeleted();
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при получении удаленных сотрудников',
+      );
+    }
+  }
+
   @Get(':id')
   async getById(@Param('id') id: number): Promise<Employee | null> {
     try {

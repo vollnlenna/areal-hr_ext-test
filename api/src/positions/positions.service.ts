@@ -15,7 +15,14 @@ export class PositionsService {
 
   async getAll(): Promise<Position[]> {
     const result: QueryResult<Position> = await this.pgPool.query(
-      `select * from positions`,
+      `select * from positions where deleted_at is null`,
+    );
+    return result.rows;
+  }
+
+  async getDeleted(): Promise<Position[]> {
+    const result: QueryResult<Position> = await this.pgPool.query(
+      `select * from positions where deleted_at is not null`,
     );
     return result.rows;
   }

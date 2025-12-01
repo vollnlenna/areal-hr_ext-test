@@ -19,7 +19,14 @@ export class HrOperationsService {
 
   async getAll(): Promise<HrOperation[]> {
     const result: QueryResult<HrOperation> = await this.pgPool.query(
-      `select * from hr_operations`,
+      `select * from hr_operations where deleted_at is null`,
+    );
+    return result.rows;
+  }
+
+  async getDeleted(): Promise<HrOperation[]> {
+    const result: QueryResult<HrOperation> = await this.pgPool.query(
+      `select * from hr_operations where deleted_at is not null`,
     );
     return result.rows;
   }

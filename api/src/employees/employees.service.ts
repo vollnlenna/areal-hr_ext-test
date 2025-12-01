@@ -20,7 +20,14 @@ export class EmployeesService {
 
   async getAll(): Promise<Employee[]> {
     const result: QueryResult<Employee> = await this.pgPool.query(
-      `select * from employees`,
+      `select * from employees where deleted_at is null`,
+    );
+    return result.rows;
+  }
+
+  async getDeleted(): Promise<Employee[]> {
+    const result: QueryResult<Employee> = await this.pgPool.query(
+      `select * from employees where deleted_at is not null`,
     );
     return result.rows;
   }

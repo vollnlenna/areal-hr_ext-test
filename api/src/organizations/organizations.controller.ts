@@ -27,6 +27,17 @@ export class OrganizationsController {
     }
   }
 
+  @Get('deleted')
+  async getDeleted() {
+    try {
+      return await this.organizationsService.getDeleted();
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при получении удаленных организаций',
+      );
+    }
+  }
+
   @Get(':id')
   async getById(@Param('id') id: number) {
     try {

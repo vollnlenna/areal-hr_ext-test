@@ -27,6 +27,17 @@ export class HrOperationsController {
     }
   }
 
+  @Get('deleted')
+  async getDeleted(): Promise<HrOperation[]> {
+    try {
+      return await this.hrOperationsService.getDeleted();
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при получении удаленных кадровых операций',
+      );
+    }
+  }
+
   @Get(':id')
   async getById(@Param('id') id: number): Promise<HrOperation | null> {
     try {

@@ -25,6 +25,17 @@ export class PositionsController {
     }
   }
 
+  @Get('deleted')
+  async getDeleted(): Promise<Position[]> {
+    try {
+      return await this.positionsService.getDeleted();
+    } catch {
+      throw new InternalServerErrorException(
+        'Ошибка при получении удаленных должностей',
+      );
+    }
+  }
+
   @Get(':id')
   async getById(@Param('id') id: number): Promise<Position | null> {
     try {
