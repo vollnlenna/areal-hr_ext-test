@@ -1,13 +1,24 @@
 <template>
   <div class="page">
-    <input
-      v-model="searchQuery"
-      type="text"
-      placeholder="Поиск по названию..."
-      class="search-input"
-    />
+    <div class="search-row">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Поиск по названию..."
+        class="search-input"
+      />
 
-    <div class="page-controls">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          v-model="showDeleted"
+          class="checkbox-input"
+        />
+        Удаленные должности
+      </label>
+    </div>
+
+    <div class="page-controls" v-if="!showDeleted">
       <button class="btn-add" @click="openForm()">Добавить</button>
     </div>
 
@@ -39,18 +50,30 @@ import PositionModal from '../components/PositionModal.vue'
 
 type Position = { id_position: number; name: string; deleted_at?: string | null }
 
-const list = ref<Position[]>([])
+const actualList = ref<Position[]>([])
+const deletedList = ref<Position[]>([])
 const searchQuery = ref('')
+const showDeleted = ref(false)
 
-const filtered = computed(() =>
-  list.value.filter(x => x.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+const currentList = computed(() =>
+  showDeleted.value ? deletedList.value : actualList.value
 )
 
-async function loadList() {
-  const res = await http.get<Position[]>('/positions')
-  list.value = res.data
+const filtered = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return currentList.value
+  return currentList.value.filter(x => x.name.toLowerCase().includes(q))
+})
+
+async function loadLists() {
+  const [actualRes, deletedRes] = await Promise.all([
+    http.get<Position[]>('/positions'),
+    http.get<Position[]>('/positions/deleted')
+  ])
+  actualList.value = actualRes.data
+  deletedList.value = deletedRes.data
 }
-onMounted(loadList)
+onMounted(loadLists)
 
 const form = reactive<{ visible: boolean; current: Position | null }>({ visible: false, current: null })
 function openForm(row?: Position) { form.current = row ?? null; form.visible = true }
@@ -62,17 +85,17 @@ async function saveForm(payload: { id_position?: number | null; name?: string })
   } else {
     await http.post('/positions', { name: payload.name })
   }
-  await loadList()
+  await loadLists()
   closeForm()
 }
 
 async function deleteRow(row: Position) {
   await http.delete(`/positions/${row.id_position}`)
-  await loadList()
+  await loadLists()
 }
 
 async function restoreRow(row: Position) {
   await http.patch(`/positions/restore/${row.id_position}`)
-  await loadList()
+  await loadLists()
 }
 </script>

@@ -1,13 +1,24 @@
 <template>
   <div class="page">
-    <input
-      v-model="searchQuery"
-      type="text"
-      placeholder="Поиск по отделу или организации..."
-      class="search-input"
-    />
+    <div class="search-row">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Поиск по отделу или организации..."
+        class="search-input"
+      />
 
-    <div class="page-controls">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          v-model="showDeleted"
+          class="checkbox-input"
+        />
+        Удаленные отделы
+      </label>
+    </div>
+
+    <div class="page-controls" v-if="!showDeleted">
       <button class="btn-add" @click="openForm()">Добавить</button>
     </div>
 
@@ -17,7 +28,7 @@
         :key="row.id_department"
         :row="row"
         :organizations="organizations"
-        :departments="list"
+        :departments="currentList"
         @edit="openForm"
         @delete="deleteRow"
         @restore="restoreRow"
@@ -63,9 +74,15 @@ type Department = {
 }
 type Organization = { id_organization: number; name: string }
 
-const list = ref<Department[]>([])
+const actualList = ref<Department[]>([])
+const deletedList = ref<Department[]>([])
 const organizations = ref<Organization[]>([])
 const searchQuery = ref('')
+const showDeleted = ref(false)
+
+const currentList = computed(() =>
+  showDeleted.value ? deletedList.value : actualList.value
+)
 
 const orgIndex = computed(() => {
   const m = new Map<number, string>()
@@ -73,26 +90,31 @@ const orgIndex = computed(() => {
   return m
 })
 
-const roots = computed(() => list.value.filter(d => !d.id_parent_department))
-
 const filtered = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  if (!q) return roots.value
-  return roots.value.filter(d =>
+  const parentDepartments = currentList.value.filter(d => !d.id_parent_department)
+
+  if (!q) return parentDepartments
+
+  return parentDepartments.filter(d =>
     d.name.toLowerCase().includes(q) ||
     (orgIndex.value.get(d.id_organization) ?? '').includes(q)
   )
 })
 
-async function loadList() {
-  const [orgRes, deptRes] = await Promise.all([
+async function loadLists() {
+  const [orgRes, orgDeletedRes, actualRes, deletedRes] = await Promise.all([
     http.get<Organization[]>('/organizations'),
-    http.get<Department[]>('/departments')
+    http.get('/organizations/deleted'),
+    http.get<Department[]>('/departments'),
+    http.get<Department[]>('/departments/deleted')
   ])
-  organizations.value = orgRes.data
-  list.value = deptRes.data
+  organizations.value = [...orgRes.data, ...orgDeletedRes.data]
+  actualList.value = actualRes.data
+  deletedList.value = deletedRes.data
 }
-onMounted(loadList)
+
+onMounted(loadLists)
 
 const form = reactive<{ visible: boolean; current: Department | null }>({
   visible: false,
@@ -123,7 +145,7 @@ async function saveForm(payload: {
   } else {
     await http.post('/departments', body)
   }
-  await loadList()
+  await loadLists()
   closeForm()
 }
 
@@ -141,13 +163,13 @@ const sub = reactive<{
 
 function openSubAdd(parentId: number) {
   sub.mode = 'add'
-  sub.parent = list.value.find(x => x.id_department === parentId) ?? null
+  sub.parent = currentList.value.find(x => x.id_department === parentId) ?? null
   sub.target = null
   sub.visible = true
 }
 function openSubRename(nodeId: number) {
   sub.mode = 'rename'
-  sub.target = list.value.find(x => x.id_department === nodeId) ?? null
+  sub.target = currentList.value.find(x => x.id_department === nodeId) ?? null
   sub.parent = null
   sub.visible = true
 }
@@ -157,21 +179,21 @@ function closeSub() {
   sub.target = null
 }
 async function afterSubSaved() {
-  await loadList()
+  await loadLists()
   closeSub()
 }
 
 async function deleteRow(row: Department) {
   await http.delete(`/departments/${row.id_department}`)
-  await loadList()
+  await loadLists()
 }
 async function deleteSub(id: number) {
   await http.delete(`/departments/${id}`)
-  await loadList()
+  await loadLists()
 }
 async function restoreRow(row: Department) {
   await http.patch(`/departments/restore/${row.id_department}`)
-  await loadList()
+  await loadLists()
 }
 </script>
 

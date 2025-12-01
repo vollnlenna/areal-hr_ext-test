@@ -56,7 +56,9 @@ const form = reactive({
 })
 const error = ref('')
 
-const activeOrganizations = computed(() => props.orgList.filter(org => !org.deleted_at))
+const activeOrganizations = computed(() =>
+  props.orgList.filter(o => !o.deleted_at)
+)
 
 watch(() => props.payload, (p) => {
   error.value = ''

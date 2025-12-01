@@ -7,8 +7,22 @@
 
       <div class="card-comment">
         <div class="comment-label">Организация:</div>
-        <div class="card-tree-font comment-content" :title="organizationName">
-          <div class="comment-scroll">{{ organizationName }}</div>
+        <div
+          class="card-tree-font comment-content org-block"
+          :class="{ 'org-deleted': orgIsDeleted }"
+          :title="orgTitle"
+        >
+          <div class="comment-scroll">
+            <template v-if="org && !orgIsDeleted">
+              {{ org.name }}
+            </template>
+            <template v-else-if="orgIsDeleted">
+              Организация удалена (<span class="org-deleted-name">{{ org?.name }}</span>)
+            </template>
+            <template v-else>
+              Организация #{{ row.id_organization }} (не найдена)
+            </template>
+          </div>
         </div>
       </div>
 
@@ -102,9 +116,15 @@ type Dept = {
   deleted_at?: string | null
 }
 
+type Org = {
+  id_organization: number
+  name: string
+  deleted_at?: string | null
+}
+
 type Props = {
   row: Dept
-  organizations: { id_organization: number; name: string }[]
+  organizations: Org[]
   departments: Dept[]
 }
 
@@ -118,10 +138,14 @@ const emit = defineEmits<{
   (e: 'sub-delete', id: number): void
 }>()
 
-const organizationName = computed(() =>
-  props.organizations.find(o => o.id_organization === props.row.id_organization)?.name
-  ?? `#${props.row.id_organization}`
+const org = computed<Org | null>(
+  () => props.organizations.find(o => o.id_organization === props.row.id_organization) ?? null
 )
+const orgIsDeleted = computed(() => !!org.value?.deleted_at)
+const orgTitle = computed(() => {
+  if (!org.value) return `Организация #${props.row.id_organization} (не найдена)`
+  return orgIsDeleted.value ? `Организация удалена (${org.value.name})` : org.value.name
+})
 
 const childrenMap = computed(() => {
   const m = new Map<number, Dept[]>()
@@ -250,4 +274,10 @@ function formatDate(val: unknown) {
 }
 .tree-item:hover { background: #f0f0f0; }
 .tree-item.selected { background: #e9e9e9; border-color: #aaa; }
+.org-block.org-deleted {
+  color: #c1121f;
+}
+.org-deleted-name {
+  font-style: italic;
+}
 </style>

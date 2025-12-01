@@ -1,13 +1,24 @@
 <template>
   <div class="page">
-    <input
-      v-model="searchQuery"
-      type="text"
-      placeholder="Поиск по названию..."
-      class="search-input"
-    />
+    <div class="search-row">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Поиск по названию..."
+        class="search-input"
+      />
 
-    <div class="page-controls">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          v-model="showDeleted"
+          class="checkbox-input"
+        />
+        Удаленные организации
+      </label>
+    </div>
+
+    <div class="page-controls" v-if="!showDeleted">
       <button class="btn-add" @click="openForm()">Добавить</button>
     </div>
 
@@ -39,18 +50,30 @@ import OrgModal from '../components/OrgModal.vue'
 
 type Org = { id_organization: number; name: string; comment?: string | null; deleted_at?: string | null }
 
-const list = ref<Org[]>([])
+const actualList = ref<Org[]>([])
+const deletedList = ref<Org[]>([])
 const searchQuery = ref('')
+const showDeleted = ref(false)
 
-const filtered = computed(() =>
-  list.value.filter(x => x.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+const currentList = computed(() =>
+  showDeleted.value ? deletedList.value : actualList.value
 )
 
-async function loadList() {
-  const res = await http.get<Org[]>('/organizations')
-  list.value = res.data
+const filtered = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return currentList.value
+  return currentList.value.filter(x => x.name.toLowerCase().includes(q))
+})
+
+async function loadLists() {
+  const [actualRes, deletedRes] = await Promise.all([
+    http.get<Org[]>('/organizations'),
+    http.get<Org[]>('/organizations/deleted')
+  ])
+  actualList.value = actualRes.data
+  deletedList.value = deletedRes.data
 }
-onMounted(loadList)
+onMounted(loadLists)
 
 const form = reactive<{ visible: boolean; current: Org | null }>({ visible: false, current: null })
 function openForm(row?: Org) { form.current = row ?? null; form.visible = true }
@@ -68,17 +91,17 @@ async function saveForm(payload: { id_organization?: number | null; name?: strin
       comment: payload.comment ?? null
     })
   }
-  await loadList()
+  await loadLists()
   closeForm()
 }
 
 async function deleteRow(row: Org) {
   await http.delete(`/organizations/${row.id_organization}`)
-  await loadList()
+  await loadLists()
 }
 
 async function restoreRow(row: Org) {
   await http.patch(`/organizations/restore/${row.id_organization}`)
-  await loadList()
+  await loadLists()
 }
 </script>
