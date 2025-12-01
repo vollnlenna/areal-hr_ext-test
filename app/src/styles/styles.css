@@ -162,3 +162,22 @@ select::-ms-expand { display: none; }
   border-radius: 8px;
   border: 1px solid #aaa;
 }
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.checkbox-input:checked {
+  accent-color: black !important;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
