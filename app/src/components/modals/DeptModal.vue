@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="modal-backdrop" @click.self="onCancel">
     <div class="modal">
-      <h3>{{ form.id ? 'Изменить отдел' : 'Добавить отдел' }}</h3>
+      <h3>{{ form.id ? 'Изменить отдел' : 'Добавить корневой отдел структуры' }}</h3>
 
       <div v-if="error" class="error-box">{{ error }}</div>
 
@@ -34,16 +34,14 @@
 <script setup lang="ts">
 import { reactive, ref, watch, computed } from 'vue'
 import { isAxiosError } from 'axios'
-
-type Save = { id_department?: number | null; name?: string; organizationId?: number | null; comment?: string | null }
-type DeptPayload = { id_department: number; name: string; id_organization: number; id_parent_department?: number | null; comment?: string | null }
-type OrgOption = { id_organization: number; name: string; deleted_at?: string | null }
+import type { Department, DepartmentSave } from '@/entities/department.ts'
+import type { Organization } from '@/entities/organization.ts'
 
 const props = defineProps<{
   visible: boolean
-  payload: DeptPayload | null
-  onSave: (data: Save) => Promise<void>
-  orgList: OrgOption[]
+  payload: Department | null
+  onSave: (data: DepartmentSave) => Promise<void>
+  orgList: Organization[]
 }>()
 
 const emit = defineEmits<{ (e: 'cancel'): void }>()
@@ -74,7 +72,7 @@ async function submit() {
     await props.onSave({
       id_department: form.id,
       name: form.name,
-      organizationId: form.organizationId,
+      id_organization: form.organizationId,
       comment: form.comment
     })
   } catch (e) {

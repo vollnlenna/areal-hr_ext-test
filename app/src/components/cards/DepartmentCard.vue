@@ -8,7 +8,7 @@
       <div class="card-comment">
         <div class="comment-label">Организация:</div>
         <div
-          class="card-tree-font comment-content org-block"
+          class="comment-content org-block"
           :class="{ 'org-deleted': orgIsDeleted }"
           :title="orgTitle"
         >
@@ -30,7 +30,7 @@
 
       <div class="subtree-block">
         <div class="subtree-header">
-          <div class="card-tree-font comment-label">Подразделения</div>
+          <div class="comment-label">Подразделения:</div>
           <div class="tree-toolbar">
             <button class="icon-btn" title="Добавить" @click="$emit('sub-add', selectedId ?? row.id_department)">
               <Icon icon="mdi:plus" width="16" />
@@ -79,8 +79,8 @@
       <div class="sep" />
 
       <div class="card-comment">
-        <div class="comment-label card-tree-font">Комментарий:</div>
-        <div class="comment-content card-tree-font" :title="row.comment || 'нет'">
+        <div class="comment-label">Комментарий:</div>
+        <div class="comment-content" :title="row.comment || 'нет'">
           <em v-if="!row.comment">нет</em>
           <div v-else class="comment-scroll">{{ row.comment }}</div>
         </div>
@@ -106,39 +106,27 @@
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue'
 import { Icon } from '@iconify/vue'
+import type { Department } from '@/entities/department.ts'
+import type { Organization } from '@/entities/organization.ts'
 
-type Dept = {
-  id_department: number
-  name: string
-  id_organization: number
-  id_parent_department?: number | null
-  comment?: string | null
-  deleted_at?: string | null
-}
+type FlatItem = { id: number; name: string; level: number; hasChildren: boolean }
 
-type Org = {
-  id_organization: number
-  name: string
-  deleted_at?: string | null
-}
+const props = defineProps<{
+  row: Department
+  organizations: Organization[]
+  departments: Department[]
+}>()
 
-type Props = {
-  row: Dept
-  organizations: Org[]
-  departments: Dept[]
-}
-
-const props = defineProps<Props>()
 const emit = defineEmits<{
-  (e: 'edit', row: Dept): void
-  (e: 'delete', row: Dept): void
-  (e: 'restore', row: Dept): void
+  (e: 'edit', row: Department): void
+  (e: 'delete', row: Department): void
+  (e: 'restore', row: Department): void
   (e: 'sub-add', parentId: number): void
   (e: 'sub-rename', id: number): void
   (e: 'sub-delete', id: number): void
 }>()
 
-const org = computed<Org | null>(
+const org = computed<Organization | null>(
   () => props.organizations.find(o => o.id_organization === props.row.id_organization) ?? null
 )
 const orgIsDeleted = computed(() => !!org.value?.deleted_at)
@@ -148,7 +136,7 @@ const orgTitle = computed(() => {
 })
 
 const childrenMap = computed(() => {
-  const m = new Map<number, Dept[]>()
+  const m = new Map<number, Department[]>()
   for (const d of props.departments) {
     if (d.deleted_at) continue
     if (d.id_parent_department) {
@@ -175,7 +163,6 @@ watchEffect(() => {
   expandedSet.value = set
 })
 
-type FlatItem = { id: number; name: string; level: number; hasChildren: boolean }
 const flatTree = computed<FlatItem[]>(() => {
   const res: FlatItem[] = []
   const m = childrenMap.value
@@ -234,36 +221,17 @@ function formatDate(val: unknown) {
 
 <style scoped>
 .card-tree-font { font-size: 11px; }
-
-.subtree-block { display: flex; flex-direction: column; gap: 6px; height: 200px; }
-.subtree-header { display: flex; align-items: center; justify-content: space-between; }
+.subtree-block {  height: 200px; }
 .tree-toolbar { display: flex; gap: 6px; }
-
-.icon-btn {
-  background: #fff;
-  border: 1px solid #aaa;
-  border-radius: 6px;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.icon-btn:disabled { opacity: .4; cursor: default; pointer-events: none; }
-
-.subtree-content { flex: 1; min-height: 0; overflow: auto; }
 .tree-list { margin: 0; padding: 0; list-style: none; min-width: max-content; }
 .tree-row { display: flex; align-items: center; gap: 6px; margin: 4px 0; white-space: nowrap; width: 100%; }
 .tree-indent { display: inline-block; height: 1px; }
-
 .toggle {
   width: 18px; height: 18px; border-radius: 50%;
   border: 1px solid #aaa; background: #fff; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; padding: 0;
 }
 .toggle.placeholder { visibility: hidden; }
-
 .tree-item {
   border: 1px solid #e6e6e6;
   background: #f7f7f7;
@@ -274,10 +242,6 @@ function formatDate(val: unknown) {
 }
 .tree-item:hover { background: #f0f0f0; }
 .tree-item.selected { background: #e9e9e9; border-color: #aaa; }
-.org-block.org-deleted {
-  color: #c1121f;
-}
-.org-deleted-name {
-  font-style: italic;
-}
+.org-block.org-deleted { color: #c1121f; }
+.org-deleted-name { font-style: italic; }
 </style>

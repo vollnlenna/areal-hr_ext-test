@@ -19,22 +19,16 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
 import { isAxiosError } from 'axios'
-import http from '../api/http'
-
-type Dept = {
-  id_department: number
-  name: string
-  id_organization: number
-  id_parent_department?: number | null
-  comment?: string | null
-}
+import type { Department } from '@/entities/department.ts'
 
 const props = defineProps<{
   visible: boolean
   mode: 'add' | 'rename'
-  parent: Dept | null
-  target: Dept | null
+  parent: Department | null
+  target: Department | null
+  onSave: (mode: 'add' | 'rename', name: string, parent?: Department, target?: Department) => Promise<void>
 }>()
+
 const emit = defineEmits<{ (e: 'cancel'): void; (e: 'saved'): void }>()
 
 const form = reactive({ name: '' })
@@ -53,20 +47,7 @@ async function submit() {
   error.value = ''
   const name = form.name.trim()
   try {
-    if (props.mode === 'add') {
-      await http.post('/departments', {
-        name,
-        id_organization: props.parent!.id_organization,
-        id_parent_department: props.parent!.id_department,
-        comment: null
-      })
-    } else {
-      await http.patch(`/departments/${props.target!.id_department}`, {
-        name,
-        id_organization: props.target!.id_organization,
-        id_parent_department: props.target!.id_parent_department ?? null
-      })
-    }
+    await props.onSave(props.mode, name, props.parent ?? undefined, props.target ?? undefined)
     emit('saved')
   } catch (e) {
     if (isAxiosError(e)) {
@@ -77,5 +58,6 @@ async function submit() {
     }
   }
 }
+
 function onCancel() { emit('cancel') }
 </script>

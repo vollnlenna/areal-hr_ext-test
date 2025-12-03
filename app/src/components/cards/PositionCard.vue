@@ -21,17 +21,13 @@
 </template>
 
 <script setup lang="ts">
-type PositionRow = {
-  id_position: number
-  name: string
-  deleted_at?: string | null
-}
+import type { Position } from '@/entities/position.ts'
 
-const props = defineProps<{ row: PositionRow }>()
+const props = defineProps<{ row: Position }>()
 const emit = defineEmits<{
-  (e: 'edit', row: PositionRow): void
-  (e: 'delete', row: PositionRow): void
-  (e: 'restore', row: PositionRow): void
+  (e: 'edit', row: Position): void
+  (e: 'delete', row: Position): void
+  (e: 'restore', row: Position): void
 }>()
 
 function onDelete() {

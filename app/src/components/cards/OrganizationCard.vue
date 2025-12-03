@@ -44,19 +44,13 @@
 </template>
 
 <script setup lang="ts">
-type OrgRow = {
-  id_organization: number
-  name: string
-  comment?: string | null
-  deleted_at?: string | null
-  [key: string]: unknown
-}
+import type { Organization } from '@/entities/organization.ts'
 
-const props = defineProps<{ row: OrgRow }>()
+const props = defineProps<{ row: Organization }>()
 const emit = defineEmits<{
-  (e: 'edit', row: OrgRow): void
-  (e: 'delete', row: OrgRow): void
-  (e: 'restore', row: OrgRow): void
+  (e: 'edit', row: Organization): void
+  (e: 'delete', row: Organization): void
+  (e: 'restore', row: Organization): void
 }>()
 
 function onDelete() {
