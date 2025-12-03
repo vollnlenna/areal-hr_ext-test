@@ -35,17 +35,39 @@ const emit = defineEmits<{ (e: 'cancel'): void }>()
 const form = reactive({ id: null as number | null, name: '', comment: null as string | null })
 const error = ref('')
 
-watch(() => props.payload, (p) => {
+function resetForm() {
+  Object.assign(form, {
+    id: null,
+    name: '',
+    comment: null
+  })
   error.value = ''
-  form.id = p?.id_organization ?? null
-  form.name = p?.name ?? ''
-  form.comment = p?.comment ?? null
-}, { immediate: true })
+}
+
+watch(
+  () => props.payload,
+  (p) => {
+    if (!p) {
+      resetForm()
+      return
+    }
+    error.value = ''
+    form.id = p.id_organization
+    form.name = p.name
+    form.comment = p.comment ?? null
+  },
+  { immediate: true }
+)
 
 async function submit() {
   error.value = ''
   try {
-    await props.onSave({ id_organization: form.id, name: form.name, comment: form.comment })
+    await props.onSave({
+      id_organization: form.id,
+      name: form.name,
+      comment: form.comment
+    })
+    resetForm()
   } catch (e) {
     if (isAxiosError(e)) {
       const msg = e.response?.data?.message ?? 'Ошибка сохранения'
@@ -53,5 +75,8 @@ async function submit() {
     } else error.value = 'Неизвестная ошибка'
   }
 }
-function onCancel() { emit('cancel') }
+function onCancel() {
+  resetForm()
+  emit('cancel')
+}
 </script>

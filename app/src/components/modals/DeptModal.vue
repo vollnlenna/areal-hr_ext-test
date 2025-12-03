@@ -54,17 +54,35 @@ const form = reactive({
 })
 const error = ref('')
 
+function resetForm() {
+  Object.assign(form, {
+    id: null,
+    name: '',
+    organizationId: null,
+    comment: null
+  })
+  error.value = ''
+}
+
 const activeOrganizations = computed(() =>
   props.orgList.filter(o => !o.deleted_at)
 )
 
-watch(() => props.payload, (p) => {
-  error.value = ''
-  form.id = p?.id_department ?? null
-  form.name = p?.name ?? ''
-  form.organizationId = p?.id_organization ?? null
-  form.comment = p?.comment ?? null
-}, { immediate: true })
+watch(
+  () => props.payload,
+  (p) => {
+    if (!p) {
+      resetForm()
+      return
+    }
+    error.value = ''
+    form.id = p.id_department
+    form.name = p.name
+    form.organizationId = p.id_organization
+    form.comment = p.comment ?? null
+  },
+  { immediate: true }
+)
 
 async function submit() {
   error.value = ''
@@ -75,6 +93,7 @@ async function submit() {
       id_organization: form.organizationId,
       comment: form.comment
     })
+    resetForm()
   } catch (e) {
     if (isAxiosError(e)) {
       const msg = e.response?.data?.message ?? 'Ошибка сохранения'
@@ -84,5 +103,8 @@ async function submit() {
     }
   }
 }
-function onCancel() { emit('cancel') }
+function onCancel() {
+  resetForm()
+  emit('cancel')
+}
 </script>

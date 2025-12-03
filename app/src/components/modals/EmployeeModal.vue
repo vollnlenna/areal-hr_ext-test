@@ -142,12 +142,12 @@
         </div>
       </div>
 
+      <div v-if="errorBox" class="error-box">{{ errorBox }}</div>
+
       <div class="modal-actions">
         <button class="btn-save" @click="submit">Сохранить</button>
         <button class="btn-cancel" @click="onCancel">Отмена</button>
       </div>
-
-      <div v-if="errorBox" class="error-box">{{ errorBox }}</div>
     </div>
   </div>
 </template>
@@ -313,7 +313,6 @@ function resetForm() {
     building: '',
     apartment: ''
   })
-  Object.keys(fieldErrors).forEach(k => (fieldErrors[k] = false))
   errorBox.value = ''
 }
 
@@ -432,7 +431,7 @@ function onCancel() {
   flex: 1;
 }
 .error-box {
-  margin-top: 10px;
+  margin-top: 20px;
   margin-bottom: auto;
 }
 .input-error {
