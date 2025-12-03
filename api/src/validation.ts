@@ -117,9 +117,4 @@ export const validateFile = Joi.object({
     'string.max': 'Имя файла должно содержать не более 100 символов',
     'any.required': 'Имя файла обязательно',
   }),
-
-  file_path: Joi.string().required().messages({
-    'string.empty': 'Файл обязателен',
-    'any.required': 'Файл обязателен',
-  }),
 });

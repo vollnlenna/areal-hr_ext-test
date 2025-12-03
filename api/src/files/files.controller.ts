@@ -2,19 +2,46 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
   Delete,
   Param,
-  Body,
+  UploadedFile,
+  UseInterceptors,
   BadRequestException,
   InternalServerErrorException,
+  Body,
+  Res,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { FilesService, File } from './files.service';
+import { multerFilesConfig } from './multer-config';
 import { validateFile } from '../validation';
+import type { Response } from 'express';
+import { join } from 'path';
+import * as fs from 'fs';
 
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', multerFilesConfig))
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body('file_name') fileName?: string,
+  ): Promise<File> {
+    const { error } = validateFile.validate({ file_name: fileName });
+    if (error) throw new BadRequestException(error.message);
+
+    if (!file) {
+      throw new BadRequestException('Файл не загружен');
+    }
+
+    try {
+      return await this.filesService.saveUploadedFile(file, fileName!);
+    } catch {
+      throw new InternalServerErrorException('Ошибка при загрузке файла');
+    }
+  }
 
   @Get()
   async getAll(): Promise<File[]> {
@@ -25,49 +52,19 @@ export class FilesController {
     }
   }
 
-  @Get(':id')
-  async getById(@Param('id') id: number): Promise<File | null> {
-    try {
-      return await this.filesService.getById(id);
-    } catch {
-      throw new InternalServerErrorException('Ошибка при получении файла');
+  @Get('storage/:path')
+  getFile(@Param('path') path: string, @Res() res: Response): void {
+    const root = process.env.STORAGE_DIR!;
+    const fullPath = join(process.cwd(), root, path);
+
+    if (!fs.existsSync(fullPath)) {
+      throw new BadRequestException('Файл не найден');
     }
-  }
-
-  @Post()
-  async create(
-    @Body()
-    data: {
-      file_name: string;
-      file_path: string;
-    },
-  ): Promise<File> {
-    const { error } = validateFile.validate(data);
-    if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.filesService.create(data);
+      res.sendFile(fullPath);
     } catch {
-      throw new InternalServerErrorException('Ошибка при создании файла');
-    }
-  }
-
-  @Patch(':id')
-  async update(
-    @Param('id') id: number,
-    @Body()
-    data: {
-      file_name?: string;
-      file_path?: string;
-    },
-  ): Promise<File | null> {
-    const { error } = validateFile.validate(data);
-    if (error) throw new BadRequestException(error.message);
-
-    try {
-      return await this.filesService.update(id, data);
-    } catch {
-      throw new InternalServerErrorException('Ошибка при обновлении файла');
+      throw new InternalServerErrorException('Ошибка при скачивании файла');
     }
   }
 
@@ -77,15 +74,6 @@ export class FilesController {
       return await this.filesService.delete(id);
     } catch {
       throw new InternalServerErrorException('Ошибка при удалении файла');
-    }
-  }
-
-  @Patch('restore/:id')
-  async restore(@Param('id') id: number): Promise<File | null> {
-    try {
-      return await this.filesService.restore(id);
-    } catch {
-      throw new InternalServerErrorException('Ошибка при восстановлении файла');
     }
   }
 }
