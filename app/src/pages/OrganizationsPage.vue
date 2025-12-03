@@ -44,14 +44,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from 'vue'
-import http from '../api/http'
-import OrganizationCard from '../components/OrganizationCard.vue'
-import OrgModal from '../components/OrgModal.vue'
+import OrganizationCard from '../components/cards/OrganizationCard.vue'
+import OrgModal from '../components/modals/OrgModal.vue'
+import { useOrganizations } from '../composables/useOrganizations'
+import type { Organization, OrganizationSave } from '../entities/organization'
 
-type Org = { id_organization: number; name: string; comment?: string | null; deleted_at?: string | null }
+const { actualList, deletedList, loadOrganizations, saveOrganization, deleteOrganization, restoreOrganization } = useOrganizations()
 
-const actualList = ref<Org[]>([])
-const deletedList = ref<Org[]>([])
 const searchQuery = ref('')
 const showDeleted = ref(false)
 
@@ -65,43 +64,30 @@ const filtered = computed(() => {
   return currentList.value.filter(x => x.name.toLowerCase().includes(q))
 })
 
-async function loadLists() {
-  const [actualRes, deletedRes] = await Promise.all([
-    http.get<Org[]>('/organizations'),
-    http.get<Org[]>('/organizations/deleted')
-  ])
-  actualList.value = actualRes.data
-  deletedList.value = deletedRes.data
+onMounted(loadOrganizations)
+
+const form = reactive<{ visible: boolean; current: Organization | null }>({ visible: false, current: null })
+
+function openForm(row?: Organization) {
+  form.current = row ?? null
+  form.visible = true
 }
-onMounted(loadLists)
 
-const form = reactive<{ visible: boolean; current: Org | null }>({ visible: false, current: null })
-function openForm(row?: Org) { form.current = row ?? null; form.visible = true }
-function closeForm() { form.visible = false; form.current = null }
+function closeForm() {
+  form.visible = false
+  form.current = null
+}
 
-async function saveForm(payload: { id_organization?: number | null; name?: string; comment?: string | null }) {
-  if (payload.id_organization) {
-    await http.patch(`/organizations/${payload.id_organization}`, {
-      name: payload.name,
-      comment: payload.comment ?? null
-    })
-  } else {
-    await http.post('/organizations', {
-      name: payload.name,
-      comment: payload.comment ?? null
-    })
-  }
-  await loadLists()
+async function saveForm(payload: OrganizationSave) {
+  await saveOrganization(payload)
   closeForm()
 }
 
-async function deleteRow(row: Org) {
-  await http.delete(`/organizations/${row.id_organization}`)
-  await loadLists()
+async function deleteRow(row: Organization) {
+  await deleteOrganization(row.id_organization)
 }
 
-async function restoreRow(row: Org) {
-  await http.patch(`/organizations/restore/${row.id_organization}`)
-  await loadLists()
+async function restoreRow(row: Organization) {
+  await restoreOrganization(row.id_organization)
 }
 </script>

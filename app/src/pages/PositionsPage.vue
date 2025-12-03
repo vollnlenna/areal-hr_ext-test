@@ -44,14 +44,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from 'vue'
-import http from '../api/http'
-import PositionCard from '../components/PositionCard.vue'
-import PositionModal from '../components/PositionModal.vue'
+import PositionCard from '../components/cards/PositionCard.vue'
+import PositionModal from '../components/modals/PositionModal.vue'
+import { usePositions } from '../composables/usePositions'
+import type { Position, PositionSave } from '../entities/position'
 
-type Position = { id_position: number; name: string; deleted_at?: string | null }
+const { actualList, deletedList, loadPositions, savePosition, deletePosition, restorePosition } = usePositions()
 
-const actualList = ref<Position[]>([])
-const deletedList = ref<Position[]>([])
 const searchQuery = ref('')
 const showDeleted = ref(false)
 
@@ -65,37 +64,30 @@ const filtered = computed(() => {
   return currentList.value.filter(x => x.name.toLowerCase().includes(q))
 })
 
-async function loadLists() {
-  const [actualRes, deletedRes] = await Promise.all([
-    http.get<Position[]>('/positions'),
-    http.get<Position[]>('/positions/deleted')
-  ])
-  actualList.value = actualRes.data
-  deletedList.value = deletedRes.data
-}
-onMounted(loadLists)
+onMounted(loadPositions)
 
 const form = reactive<{ visible: boolean; current: Position | null }>({ visible: false, current: null })
-function openForm(row?: Position) { form.current = row ?? null; form.visible = true }
-function closeForm() { form.visible = false; form.current = null }
 
-async function saveForm(payload: { id_position?: number | null; name?: string }) {
-  if (payload.id_position) {
-    await http.patch(`/positions/${payload.id_position}`, { name: payload.name })
-  } else {
-    await http.post('/positions', { name: payload.name })
-  }
-  await loadLists()
+function openForm(row?: Position) {
+  form.current = row ?? null
+  form.visible = true
+}
+
+function closeForm() {
+  form.visible = false
+  form.current = null
+}
+
+async function saveForm(payload: PositionSave) {
+  await savePosition(payload)
   closeForm()
 }
 
 async function deleteRow(row: Position) {
-  await http.delete(`/positions/${row.id_position}`)
-  await loadLists()
+  await deletePosition(row.id_position)
 }
 
 async function restoreRow(row: Position) {
-  await http.patch(`/positions/restore/${row.id_position}`)
-  await loadLists()
+  await restorePosition(row.id_position)
 }
 </script>

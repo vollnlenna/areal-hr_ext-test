@@ -51,6 +51,7 @@
       :mode="sub.mode"
       :parent="sub.parent"
       :target="sub.target"
+      :on-save="saveSubDepartment"
       @saved="afterSubSaved"
       @cancel="closeSub"
     />
@@ -59,23 +60,27 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from 'vue'
-import http from '../api/http'
-import DepartmentCard from '../components/DepartmentCard.vue'
-import DeptModal from '../components/DeptModal.vue'
-import SubDeptModal from '../components/SubDeptModal.vue'
+import DepartmentCard from '../components/cards/DepartmentCard.vue'
+import DeptModal from '../components/modals/DeptModal.vue'
+import SubDeptModal from '../components/modals/SubDeptModal.vue'
+import { useDepartments } from '../composables/useDepartments'
+import { useOrganizations } from '../composables/useOrganizations'
+import type { Department, DepartmentSave } from '../entities/department'
+import type { Organization } from '../entities/organization'
 
-type Department = {
-  id_department: number
-  name: string
-  id_organization: number
-  id_parent_department?: number | null
-  comment?: string | null
-  deleted_at?: string | null
-}
-type Organization = { id_organization: number; name: string }
+const {
+  actualList,
+  deletedList,
+  loadDepartments,
+  saveDepartment,
+  deleteDepartment,
+  restoreDepartment,
+  addSubDepartment,
+  renameSubDepartment
+} = useDepartments()
 
-const actualList = ref<Department[]>([])
-const deletedList = ref<Department[]>([])
+const { loadAllOrganizations } = useOrganizations()
+
 const organizations = ref<Organization[]>([])
 const searchQuery = ref('')
 const showDeleted = ref(false)
@@ -103,15 +108,8 @@ const filtered = computed(() => {
 })
 
 async function loadLists() {
-  const [orgRes, orgDeletedRes, actualRes, deletedRes] = await Promise.all([
-    http.get<Organization[]>('/organizations'),
-    http.get('/organizations/deleted'),
-    http.get<Department[]>('/departments'),
-    http.get<Department[]>('/departments/deleted')
-  ])
-  organizations.value = [...orgRes.data, ...orgDeletedRes.data]
-  actualList.value = actualRes.data
-  deletedList.value = deletedRes.data
+  organizations.value = await loadAllOrganizations()
+  await loadDepartments()
 }
 
 onMounted(loadLists)
@@ -120,33 +118,33 @@ const form = reactive<{ visible: boolean; current: Department | null }>({
   visible: false,
   current: null
 })
+
 function openForm(row?: Department) {
   form.current = row ?? null
   form.visible = true
 }
+
 function closeForm() {
   form.visible = false
   form.current = null
 }
-async function saveForm(payload: {
-  id_department?: number | null
-  name?: string
-  organizationId?: number | null
-  comment?: string | null
-}) {
-  const body = {
-    name: payload.name,
-    id_organization: payload.organizationId ?? null,
-    id_parent_department: null,
-    comment: payload.comment ?? null
-  }
-  if (payload.id_department) {
-    await http.patch(`/departments/${payload.id_department}`, body)
-  } else {
-    await http.post('/departments', body)
-  }
-  await loadLists()
+
+async function saveForm(payload: DepartmentSave) {
+  await saveDepartment(payload)
   closeForm()
+}
+
+async function saveSubDepartment(mode: 'add' | 'rename', name: string, parent?: Department, target?: Department) {
+  if (mode === 'add' && parent) {
+    await addSubDepartment(name, parent.id_department, parent.id_organization)
+  } else if (mode === 'rename' && target) {
+    await renameSubDepartment(
+      target.id_department,
+      name,
+      target.id_organization,
+      target.id_parent_department
+    )
+  }
 }
 
 const sub = reactive<{
@@ -167,33 +165,35 @@ function openSubAdd(parentId: number) {
   sub.target = null
   sub.visible = true
 }
+
 function openSubRename(nodeId: number) {
   sub.mode = 'rename'
   sub.target = currentList.value.find(x => x.id_department === nodeId) ?? null
   sub.parent = null
   sub.visible = true
 }
+
 function closeSub() {
   sub.visible = false
   sub.parent = null
   sub.target = null
 }
+
 async function afterSubSaved() {
-  await loadLists()
+  await loadDepartments()
   closeSub()
 }
 
 async function deleteRow(row: Department) {
-  await http.delete(`/departments/${row.id_department}`)
-  await loadLists()
+  await deleteDepartment(row.id_department)
 }
+
 async function deleteSub(id: number) {
-  await http.delete(`/departments/${id}`)
-  await loadLists()
+  await deleteDepartment(id)
 }
+
 async function restoreRow(row: Department) {
-  await http.patch(`/departments/restore/${row.id_department}`)
-  await loadLists()
+  await restoreDepartment(row.id_department)
 }
 </script>
 
