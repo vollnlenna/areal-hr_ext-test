@@ -43,3 +43,6 @@ build/
 
 # Docker
 .docker/
+
+# Storage files
+api/storage/
