@@ -5,6 +5,8 @@ export interface PassportScan {
   id_passport_scan: number;
   id_employee: number;
   id_file: number;
+  file_name: string;
+  file_path: string;
 }
 
 @Injectable()
@@ -13,10 +15,11 @@ export class PassportScansService {
 
   async getByEmployee(employeeId: number): Promise<PassportScan[]> {
     const result: QueryResult<PassportScan> = await this.pgPool.query(
-      `select ps.*, f.file_name, f.file_path 
-       from passport_scans ps 
-       join files f on ps.id_file = f.id_file 
-       where ps.id_employee = $1 
+      `select ps.*, f.file_name, f.file_path
+       from passport_scans ps
+       join files f on ps.id_file = f.id_file
+       where ps.id_employee = $1
+         and f.deleted_at is null
        order by ps.id_passport_scan desc`,
       [employeeId],
     );
