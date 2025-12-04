@@ -43,14 +43,30 @@ export async function logEntityChanges<T extends Record<string, unknown>>(
     (oldRow[idKey] as number | undefined) ??
     (newRow[idKey] as number | undefined);
 
+  const skipFields = new Set(['created_at', 'updated_at']);
+
   for (const key of Object.keys(newRow) as Array<keyof T>) {
+    if (skipFields.has(key as string)) continue;
+
     const oldVal = oldRow[key];
     const newVal = newRow[key];
+
+    if (key === 'deleted_at') {
+      const oldIsNull = oldVal == null;
+      const newIsNull = newVal == null;
+      if (oldIsNull && newIsNull) continue;
+    }
+
+    if (key === 'birth_date') {
+      const oldStr = String(oldVal).trim();
+      const newStr = String(newVal).trim();
+      if (oldStr === newStr) continue;
+    }
 
     if (oldVal === newVal) continue;
 
     await history.logChange({
-      id_user: id_user || 1,
+      id_user,
       [idKey]: entityId ?? null,
       field_name: String(key),
       old_value: oldVal != null ? String(oldVal) : null,

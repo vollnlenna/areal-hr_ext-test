@@ -74,16 +74,19 @@ function formatValue(
 ): string {
   if (!val) return '—'
 
-  const isDate = !isNaN(Date.parse(val))
-  if (!isDate) return val
+  if (field?.startsWith('id_')) return val
 
-  const date = new Date(val)
+  const parsed = new Date(val)
+  const isValidDate = !isNaN(parsed.getTime())
 
-  if (['created_at', 'updated_at', 'deleted_at'].includes(field ?? '')) {
-    return date.toLocaleString('ru-RU')
+  if (isValidDate) {
+    if (field === 'deleted_at') {
+      return parsed.toLocaleString('ru-RU')
+    }
+    return parsed.toLocaleDateString('ru-RU')
   }
 
-  return date.toLocaleDateString('ru-RU')
+  return val
 }
 
 function formatDate(date: unknown) {
