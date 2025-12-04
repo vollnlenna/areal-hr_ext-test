@@ -9,6 +9,7 @@ import { HrOperationsModule } from './hr-operations/hr-operations.module';
 import { FilesModule } from './files/files.module';
 import { ChangeHistoryModule } from './change-history/change-history.module';
 import { PassportScansModule } from './passport-scans/passport-scans.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PassportScansModule } from './passport-scans/passport-scans.module';
     FilesModule,
     ChangeHistoryModule,
     PassportScansModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
