@@ -1,5 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Pool, QueryResult } from 'pg';
+import { ChangeHistoryService } from '../change-history/change-history.service';
+import { logEntityChanges } from '../change-history/log-change';
 
 export interface Employee {
   id_employee: number;
@@ -12,11 +14,16 @@ export interface Employee {
   created_at: Date;
   updated_at?: Date | null;
   deleted_at?: Date | null;
+
+  [key: string]: unknown;
 }
 
 @Injectable()
 export class EmployeesService {
-  constructor(@Inject('PG_POOL') private readonly pgPool: Pool) {}
+  constructor(
+    @Inject('PG_POOL') private readonly pgPool: Pool,
+    private readonly history: ChangeHistoryService,
+  ) {}
 
   async getAll(): Promise<Employee[]> {
     const result: QueryResult<Employee> = await this.pgPool.query(
@@ -34,7 +41,7 @@ export class EmployeesService {
 
   async getById(id: number): Promise<Employee | null> {
     const result: QueryResult<Employee> = await this.pgPool.query(
-      `select * from employees where id_employee = $1 and deleted_at is null`,
+      `select * from employees where id_employee = $1`,
       [id],
     );
     return result.rows[0] ?? null;
@@ -50,17 +57,24 @@ export class EmployeesService {
   }): Promise<Employee> {
     const result: QueryResult<Employee> = await this.pgPool.query(
       `insert into employees (last_name, first_name, middle_name, birth_date, passport_data, registration_address, created_at, updated_at)
-       values ($1, $2, $3, $4, $5, $6, now(), now()) returning *`,
+       values ($1, $2, $3, $4, $5, $6, now(), now())
+         returning *`,
       [
         data.last_name,
         data.first_name,
-        data.middle_name || null,
+        data.middle_name ?? null,
         data.birth_date,
         data.passport_data,
         data.registration_address,
       ],
     );
-    return result.rows[0];
+    const created = result.rows[0];
+    await logEntityChanges(this.history, {
+      entity: 'employee',
+      oldRow: {} as Employee,
+      newRow: created,
+    });
+    return created;
   }
 
   async update(
@@ -74,6 +88,9 @@ export class EmployeesService {
       registration_address?: string;
     },
   ): Promise<Employee | null> {
+    const oldRow = await this.getById(id);
+    if (!oldRow) return null;
+
     const result: QueryResult<Employee> = await this.pgPool.query(
       `update employees
        set last_name = coalesce($2, last_name),
@@ -89,28 +106,64 @@ export class EmployeesService {
         id,
         data.last_name,
         data.first_name,
-        data.middle_name,
+        data.middle_name ?? null,
         data.birth_date,
         data.passport_data,
         data.registration_address,
       ],
     );
-    return result.rows[0] ?? null;
+    const newRow = result.rows[0];
+    if (newRow) {
+      await logEntityChanges(this.history, {
+        entity: 'employee',
+        oldRow,
+        newRow,
+      });
+    }
+    return newRow ?? null;
   }
 
   async delete(id: number): Promise<Employee | null> {
+    const oldRow = await this.getById(id);
+    if (!oldRow) return null;
+
     const result: QueryResult<Employee> = await this.pgPool.query(
-      `update employees set deleted_at = now() where id_employee = $1 returning *`,
+      `update employees
+       set deleted_at = now()
+       where id_employee = $1
+       returning *`,
       [id],
     );
-    return result.rows[0] ?? null;
+    const newRow = result.rows[0];
+    if (newRow) {
+      await logEntityChanges(this.history, {
+        entity: 'employee',
+        oldRow,
+        newRow,
+      });
+    }
+    return newRow ?? null;
   }
 
   async restore(id: number): Promise<Employee | null> {
+    const oldRow = await this.getById(id);
+    if (!oldRow) return null;
+
     const result: QueryResult<Employee> = await this.pgPool.query(
-      `update employees set deleted_at = null where id_employee = $1 and deleted_at is not null returning *`,
+      `update employees
+       set deleted_at = null
+       where id_employee = $1 and deleted_at is not null
+       returning *`,
       [id],
     );
-    return result.rows[0] ?? null;
+    const newRow = result.rows[0];
+    if (newRow) {
+      await logEntityChanges(this.history, {
+        entity: 'employee',
+        oldRow,
+        newRow,
+      });
+    }
+    return newRow ?? null;
   }
 }

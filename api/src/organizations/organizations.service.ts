@@ -1,5 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Pool, QueryResult } from 'pg';
+import { ChangeHistoryService } from '../change-history/change-history.service';
+import { logEntityChanges } from '../change-history/log-change';
 
 export interface Organization {
   id_organization: number;
@@ -8,11 +10,16 @@ export interface Organization {
   created_at: Date;
   updated_at?: Date | null;
   deleted_at?: Date | null;
+
+  [key: string]: unknown;
 }
 
 @Injectable()
 export class OrganizationsService {
-  constructor(@Inject('PG_POOL') private readonly pgPool: Pool) {}
+  constructor(
+    @Inject('PG_POOL') private readonly pgPool: Pool,
+    private readonly history: ChangeHistoryService,
+  ) {}
 
   async getAll(): Promise<Organization[]> {
     const result: QueryResult<Organization> = await this.pgPool.query(
@@ -30,7 +37,7 @@ export class OrganizationsService {
 
   async getById(id: number): Promise<Organization | null> {
     const result: QueryResult<Organization> = await this.pgPool.query(
-      `select * from organizations where id_organization = $1 and deleted_at is null`,
+      `select * from organizations where id_organization = $1`,
       [id],
     );
     return result.rows[0] ?? null;
@@ -42,19 +49,28 @@ export class OrganizationsService {
   }): Promise<Organization> {
     const result: QueryResult<Organization> = await this.pgPool.query(
       `
-      insert into organizations (name, comment, created_at, updated_at)
-      values ($1, $2, now(), now())
-      returning *
+        insert into organizations (name, comment, created_at, updated_at)
+        values ($1, $2, now(), now())
+          returning *
       `,
-      [data.name, data.comment || null],
+      [data.name, data.comment ?? null],
     );
-    return result.rows[0];
+    const created = result.rows[0];
+    await logEntityChanges(this.history, {
+      entity: 'organization',
+      oldRow: {} as Organization,
+      newRow: created,
+    });
+    return created;
   }
 
   async update(
     id: number,
     data: { name?: string; comment?: string | null },
   ): Promise<Organization | null> {
+    const oldRow = await this.getById(id);
+    if (!oldRow) return null;
+
     const result: QueryResult<Organization> = await this.pgPool.query(
       `
       update organizations
@@ -66,10 +82,21 @@ export class OrganizationsService {
       `,
       [id, data.name, data.comment],
     );
-    return result.rows[0] ?? null;
+    const newRow = result.rows[0];
+    if (newRow) {
+      await logEntityChanges(this.history, {
+        entity: 'organization',
+        oldRow,
+        newRow,
+      });
+    }
+    return newRow ?? null;
   }
 
   async delete(id: number): Promise<Organization | null> {
+    const oldRow = await this.getById(id);
+    if (!oldRow) return null;
+
     const result: QueryResult<Organization> = await this.pgPool.query(
       `
       update organizations
@@ -79,17 +106,36 @@ export class OrganizationsService {
       `,
       [id],
     );
-    return result.rows[0] ?? null;
+    const newRow = result.rows[0];
+    if (newRow) {
+      await logEntityChanges(this.history, {
+        entity: 'organization',
+        oldRow,
+        newRow,
+      });
+    }
+    return newRow ?? null;
   }
 
   async restore(id: number): Promise<Organization | null> {
+    const oldRow = await this.getById(id);
+    if (!oldRow) return null;
+
     const result: QueryResult<Organization> = await this.pgPool.query(
       `update organizations
-       set deleted_at = null
-       where id_organization = $1 and deleted_at is not null
-       returning *`,
+      set deleted_at = null
+      where id_organization = $1 and deleted_at is not null
+      returning *`,
       [id],
     );
-    return result.rows[0] ?? null;
+    const newRow = result.rows[0];
+    if (newRow) {
+      await logEntityChanges(this.history, {
+        entity: 'organization',
+        oldRow,
+        newRow,
+      });
+    }
+    return newRow ?? null;
   }
 }
