@@ -5,6 +5,7 @@
       <router-link to="/departments" class="tab" :class="{ active: $route.path === '/departments' }">Отделы</router-link>
       <router-link to="/positions" class="tab" :class="{ active: $route.path === '/positions' }">Должности</router-link>
       <router-link to="/employees" class="tab" :class="{ active: $route.path === '/employees' }">Сотрудники</router-link>
+      <router-link to="/hrOperations" class="tab" :class="{ active: $route.path === '/hrOperations' }">Кадровые операции</router-link>
     </nav>
 
     <router-view />

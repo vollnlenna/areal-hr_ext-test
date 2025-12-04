@@ -3,6 +3,7 @@ import organizations from '../pages/OrganizationsPage.vue';
 import departments from '../pages/DepartmentsPage.vue';
 import positions from '../pages/PositionsPage.vue';
 import employees from '../pages/EmployeesPage.vue';
+import hrOperations from '../pages/HrOperationsPage.vue';
 
 const routes = [
   { path: '/', redirect: '/organizations' },
@@ -10,6 +11,7 @@ const routes = [
   { path: '/departments', component: departments },
   { path: '/positions', component: positions },
   { path: '/employees', component: employees },
+  { path: '/hrOperations', component: hrOperations },
 ];
 
 export default createRouter({
