@@ -7,11 +7,7 @@
 
       <div class="card-comment">
         <div class="comment-label">Организация:</div>
-        <div
-          class="comment-content org-block"
-          :class="{ 'org-deleted': orgIsDeleted }"
-          :title="orgTitle"
-        >
+        <div class="comment-content org-block" :class="{ 'org-deleted': orgIsDeleted }" :title="orgTitle">
           <div class="comment-scroll">
             <template v-if="org && !orgIsDeleted">
               {{ org.name }}
@@ -50,24 +46,12 @@
             <li v-for="item in flatTree" :key="item.id">
               <div class="tree-row">
                 <span class="tree-indent" :style="{ width: item.level * 16 + 'px' }"></span>
-
-                <button
-                  class="toggle"
-                  v-if="item.hasChildren"
-                  @click.stop="toggle(item.id)"
-                  :title="expandedSet.has(item.id) ? 'Свернуть' : 'Развернуть'"
-                >
+                <button class="toggle" v-if="item.hasChildren" @click.stop="toggle(item.id)" :title="expandedSet.has(item.id) ? 'Свернуть' : 'Развернуть'">
                   <Icon v-if="expandedSet.has(item.id)" icon="mdi:chevron-down" width="14" />
                   <Icon v-else icon="mdi:chevron-right" width="14" />
                 </button>
                 <span v-else class="toggle placeholder" />
-
-                <div
-                  class="tree-item card-tree-font"
-                  :class="{ selected: selectedId === item.id }"
-                  :title="item.name"
-                  @click="select(item.id)"
-                >
+                <div class="tree-item card-tree-font" :class="{ selected: selectedId === item.id }" :title="item.name" @click="select(item.id)">
                   {{ item.name }}
                 </div>
               </div>
@@ -242,6 +226,6 @@ function formatDate(val: unknown) {
 }
 .tree-item:hover { background: #f0f0f0; }
 .tree-item.selected { background: #e9e9e9; border-color: #aaa; }
-.org-block.org-deleted { color: #c1121f; }
+.org-block.org-deleted { color: red; }
 .org-deleted-name { font-style: italic; }
 </style>

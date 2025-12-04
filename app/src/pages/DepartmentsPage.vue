@@ -197,6 +197,3 @@ async function restoreRow(row: Department) {
 }
 </script>
 
-<style scoped>
-.four-cols { grid-template-columns: repeat(4, 1fr); }
-</style>

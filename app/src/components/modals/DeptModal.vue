@@ -11,11 +11,7 @@
       <label>Организация</label>
       <select v-model="form.organizationId">
         <option :value="null" disabled>Выберите организацию</option>
-        <option
-          v-for="o in activeOrganizations"
-          :key="o.id_organization"
-          :value="o.id_organization"
-        >
+        <option v-for="o in activeOrganizations" :key="o.id_organization" :value="o.id_organization">
           {{ o.name }}
         </option>
       </select>

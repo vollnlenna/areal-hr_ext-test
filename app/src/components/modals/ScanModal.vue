@@ -73,10 +73,6 @@ async function submit() {
     error.value = 'Выберите файл'
     return
   }
-  if (!form.name.trim()) {
-    error.value = 'Введите название файла'
-    return
-  }
   try {
     const uploadResult = await uploadFile(form.file, form.name.trim())
     if (!uploadResult) {

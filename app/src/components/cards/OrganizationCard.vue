@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="card" style="height: 250px">
     <div class="card-body">
       <div class="card-title">{{ row.name }}</div>
 
@@ -16,21 +16,8 @@
       <div class="sep" />
 
       <div class="card-actions">
-        <button
-          class="btn-edit"
-          :disabled="!!row.deleted_at"
-          @click="$emit('edit', row)"
-        >
-          Изменить
-        </button>
-
-        <button
-          class="btn-delete"
-          :disabled="!!row.deleted_at"
-          @click="onDelete"
-        >
-          Удалить
-        </button>
+        <button class="btn-edit" :disabled="!!row.deleted_at" @click="$emit('edit', row)">Изменить</button>
+        <button class="btn-delete" :disabled="!!row.deleted_at" @click="onDelete">Удалить</button>
       </div>
     </div>
 

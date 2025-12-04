@@ -33,12 +33,7 @@
       <div class="subtree-block">
         <div class="subtree-header">
           <div class="comment-label">Скан паспорта:</div>
-          <button
-            class="icon-btn"
-            title="Добавить скан"
-            @click="openScanModal"
-            :disabled="!!row.deleted_at"
-          >
+          <button class="icon-btn" title="Добавить скан" @click="openScanModal" :disabled="!!row.deleted_at">
             <Icon icon="mdi:plus" width="16" />
           </button>
         </div>
@@ -49,20 +44,11 @@
             <li v-for="scan in scans" :key="scan.id_passport_scan" class="scan-item">
               <div class="scan-info" :title="scan.file_name">
                 <Icon icon="mdi:file-outline" width="16" class="file-icon" />
-                <a
-                  :href="getFileUrl(scan.file_path)"
-                  target="_blank"
-                  class="scan-link"
-                >
+                <a :href="getFileUrl(scan.file_path)" target="_blank" class="scan-link">
                   {{ scan.file_name }}
                 </a>
               </div>
-              <button
-                class="icon-btn"
-                title="Удалить скан"
-                @click="onDeleteScan(scan)"
-                :disabled="!!row.deleted_at"
-              >
+              <button class="icon-btn" title="Удалить скан" @click="onDeleteScan(scan)" :disabled="!!row.deleted_at">
                 <Icon icon="mdi:close" width="14" />
               </button>
             </li>
@@ -73,20 +59,8 @@
       <div class="sep" />
 
       <div class="card-actions">
-        <button
-          class="btn-edit"
-          :disabled="!!row.deleted_at"
-          @click="$emit('edit', row)"
-        >
-          Изменить
-        </button>
-        <button
-          class="btn-delete"
-          :disabled="!!row.deleted_at"
-          @click="onDeleteCard"
-        >
-          Удалить
-        </button>
+        <button class="btn-edit" :disabled="!!row.deleted_at" @click="$emit('edit', row)">Изменить</button>
+        <button class="btn-delete" :disabled="!!row.deleted_at" @click="onDeleteCard">Удалить</button>
       </div>
     </div>
 
@@ -223,7 +197,6 @@ function onRestore() {
 }
 .scan-link {
   font-size: 12px;
-  color: #007bff;
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;

@@ -97,8 +97,3 @@ async function restoreRow(row: Employee) {
 }
 </script>
 
-<style scoped>
-.four-cols {
-  grid-template-columns: repeat(4, 1fr);
-}
-</style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="card" :class="{ deleted: !!row.deleted_at }" style="height: 150px">
+  <div class="card" style="height: 150px">
     <div class="card-body">
       <div class="card-title">{{ row.name }}</div>
 

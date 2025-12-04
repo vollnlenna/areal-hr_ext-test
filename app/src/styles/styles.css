@@ -44,6 +44,7 @@ nav {
   gap: 12px;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
+.four-cols { grid-template-columns: repeat(4, 1fr); }
 
 input, textarea, select {
   border: 1px solid #aaa;
@@ -69,7 +70,6 @@ select::-ms-expand { display: none; }
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 250px;
   overflow: hidden;
 }
 

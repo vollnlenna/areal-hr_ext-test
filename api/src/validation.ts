@@ -113,7 +113,6 @@ export const validateHrOperation = Joi.object({
 export const validateFile = Joi.object({
   file_name: Joi.string().min(1).max(100).required().messages({
     'string.empty': 'Имя файла обязательно',
-    'string.min': 'Имя файла должно содержать минимум 1 символ',
     'string.max': 'Имя файла должно содержать не более 100 символов',
     'any.required': 'Имя файла обязательно',
   }),
