@@ -1,4 +1,14 @@
-FROM ubuntu:latest
-LABEL authors="elena"
+FROM node:22
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD sh -c "npm run migrate && node dist/main.js"
