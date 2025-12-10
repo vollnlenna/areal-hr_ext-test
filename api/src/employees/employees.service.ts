@@ -166,4 +166,34 @@ export class EmployeesService {
     }
     return newRow ?? null;
   }
+
+  async search(
+    query: string,
+    limit = 5,
+    offset = 0,
+  ): Promise<{ items: Employee[]; hasMore: boolean }> {
+    const q = `%${query.toLowerCase()}%`;
+    const result: QueryResult<Employee> = await this.pgPool.query(
+      `select *
+       from employees
+       where deleted_at is null
+         and lower(last_name || ' ' || first_name || ' ' || coalesce(middle_name, '')) like $1
+       order by last_name, first_name, middle_name
+         limit $2 offset $3`,
+      [q, limit, offset],
+    );
+    const nextCheck: QueryResult = await this.pgPool.query(
+      `select 1
+       from employees
+       where deleted_at is null
+         and lower(last_name || ' ' || first_name || coalesce(middle_name, '')) like $1
+       offset $2
+       limit 1`,
+      [q, offset + limit],
+    );
+    return {
+      items: result.rows,
+      hasMore: nextCheck.rows.length > 0,
+    };
+  }
 }

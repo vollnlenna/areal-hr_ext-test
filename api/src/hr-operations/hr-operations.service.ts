@@ -14,6 +14,11 @@ export interface HrOperation {
   updated_at?: Date | null;
   deleted_at?: Date | null;
 
+  employee_name?: string;
+  organization_name?: string;
+  department_name?: string;
+  position_name?: string;
+
   [key: string]: unknown;
 }
 
@@ -25,24 +30,66 @@ export class HrOperationsService {
   ) {}
 
   async getAll(): Promise<HrOperation[]> {
-    const result: QueryResult<HrOperation> = await this.pgPool.query(
-      `select * from hr_operations where deleted_at is null`,
-    );
+    const query = `
+      select
+        op.*,
+        concat(e.last_name, ' ', e.first_name, ' ', coalesce(e.middle_name, '')) as employee_name,
+        o.name as organization_name,
+        d.name as department_name, 
+        p.name as position_name
+      from hr_operations op
+      left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
+      left join departments d on d.id_department = op.id_department and d.deleted_at is null
+      left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
+      left join positions p on p.id_position = op.id_position and p.deleted_at is null
+      where op.deleted_at is null 
+      order by op.id_hr_operation desc 
+    `;
+
+    const result: QueryResult<HrOperation> = await this.pgPool.query(query);
     return result.rows;
   }
 
   async getDeleted(): Promise<HrOperation[]> {
-    const result: QueryResult<HrOperation> = await this.pgPool.query(
-      `select * from hr_operations where deleted_at is not null`,
-    );
+    const query = `
+      select
+        op.*,
+        concat(e.last_name, ' ', e.first_name, ' ', coalesce(e.middle_name, '')) as employee_name,
+        o.name as organization_name,
+        d.name as department_name,
+        p.name as position_name
+      from hr_operations op
+      left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
+      left join departments d on d.id_department = op.id_department and d.deleted_at is null
+      left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
+      left join positions p on p.id_position = op.id_position and p.deleted_at is null
+      where op.deleted_at is not null 
+      order by op.id_hr_operation desc 
+    `;
+
+    const result: QueryResult<HrOperation> = await this.pgPool.query(query);
     return result.rows;
   }
 
   async getById(id: number): Promise<HrOperation | null> {
-    const result: QueryResult<HrOperation> = await this.pgPool.query(
-      `select * from hr_operations where id_hr_operation = $1`,
-      [id],
-    );
+    const query = `
+      select
+        op.*,
+        concat(e.last_name, ' ', e.first_name, ' ', coalesce(e.middle_name, '')) as employee_name,
+        o.name as organization_name,
+        d.name as department_name,
+        p.name as position_name
+      from hr_operations op
+      left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
+      left join departments d on d.id_department = op.id_department and d.deleted_at is null
+      left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
+      left join positions p on p.id_position = op.id_position and p.deleted_at is null
+      where op.id_hr_operation = $1
+    `;
+
+    const result: QueryResult<HrOperation> = await this.pgPool.query(query, [
+      id,
+    ]);
     return result.rows[0] ?? null;
   }
 

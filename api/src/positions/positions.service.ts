@@ -123,4 +123,34 @@ export class PositionsService {
     }
     return newRow ?? null;
   }
+
+  async search(
+    query: string,
+    limit = 5,
+    offset = 0,
+  ): Promise<{ items: Position[]; hasMore: boolean }> {
+    const q = `%${query.toLowerCase()}%`;
+    const result: QueryResult<Position> = await this.pgPool.query(
+      `select *
+       from positions
+       where deleted_at is null
+         and lower(name) like $1
+       order by name
+         limit $2 offset $3`,
+      [q, limit, offset],
+    );
+    const nextCheck: QueryResult = await this.pgPool.query(
+      `select 1
+       from positions
+       where deleted_at is null
+         and lower(name) like $1
+       offset $2
+       limit 1`,
+      [q, offset + limit],
+    );
+    return {
+      items: result.rows,
+      hasMore: nextCheck.rows.length > 0,
+    };
+  }
 }

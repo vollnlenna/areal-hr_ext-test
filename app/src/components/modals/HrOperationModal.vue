@@ -8,15 +8,15 @@
       <label>Сотрудник</label>
       <EmployeeCombobox
         v-model="selectedEmployee"
-        :list="employeeList"
-        :disabled="!!form.id"
+        :disabled="!!form.id && !!selectedEmployee?.id_employee"
         placeholder="ФИО"
         item-type="employee"
+        :searchFn="employeeSearchFn"
       />
 
       <label>Организация</label>
-      <select v-model="form.organizationId" @change="onOrgChange" :disabled="!!form.id">
-        <option :value="null" disabled>Выберите организацию</option>
+      <select v-model="form.organizationId" @change="onOrgChange" :disabled="!!form.id && !!form.organizationId">
+      <option :value="null" disabled>Выберите организацию</option>
         <option v-for="o in activeOrganizations" :key="o.id_organization" :value="o.id_organization">
           {{ o.name }}
         </option>
@@ -33,23 +33,22 @@
       <label>Должность</label>
       <EmployeeCombobox
         v-model="selectedPosition"
-        :list="positionList"
         :disabled="!form.departmentId"
         placeholder="Должность"
         item-type="position"
+        :searchFn="positionSearchFn"
       />
 
       <label>Зарплата</label>
       <input type="number" v-model.number="form.salary" step="1" @input="onSalaryInput" />
 
-      <div v-if="form.id" class="form-row status-row">
+      <div v-if="form.id" class="status-row">
         <label>Статус</label>
         <div class="status-radio-group">
           <label class="status-option">
             <input type="radio" :value="true" v-model="form.is_active" />
             <span>Работает</span>
           </label>
-
           <label class="status-option">
             <input type="radio" :value="false" v-model="form.is_active" />
             <span>Уволен</span>
@@ -69,24 +68,29 @@
 import { reactive, ref, watch, computed } from 'vue'
 import { isAxiosError } from 'axios'
 import EmployeeCombobox from '../common/EmployeeCombobox.vue'
-import type { HrOperation, HrOperationSave } from '@/entities/hrOperation.ts'
-import type { Employee } from '@/entities/employee.ts'
-import type { Department } from '@/entities/department.ts'
-import type { Position } from '@/entities/position.ts'
-import type { Organization } from '@/entities/organization.ts'
+import type { SearchFn, ComboboxItem, EmployeeLike, PositionLike } from '../common/EmployeeCombobox.vue'
+import { useOrganizations } from '@/composables/useOrganizations'
+import { useDepartments } from '@/composables/useDepartments'
+import { useEmployees } from '@/composables/useEmployees'
+import { usePositions } from '@/composables/usePositions'
+import type { HrOperation, HrOperationSave } from '@/entities/hrOperation'
 
 const props = defineProps<{
   visible: boolean
   payload: HrOperation | null
   onSave: (data: HrOperationSave) => Promise<void>
-  employeeList: Employee[]
-  orgList: Organization[]
-  departmentList: Department[]
-  positionList: Position[]
   existingOperations: HrOperation[]
 }>()
 
 const emit = defineEmits<{ (e: 'cancel'): void }>()
+
+const { actualList: organizations, loadOrganizations } = useOrganizations()
+const { actualList: departments, loadDepartments } = useDepartments()
+const { searchEmployees, getEmployeeById } = useEmployees()
+const { searchPositions, getPositionById } = usePositions()
+
+const employeeSearchFn: SearchFn<ComboboxItem> = ({ q, limit, offset }) => searchEmployees(q, limit, offset)
+const positionSearchFn: SearchFn<ComboboxItem> = ({ q, limit, offset }) => searchPositions(q, limit, offset)
 
 const form = reactive({
   id: null as number | null,
@@ -95,49 +99,73 @@ const form = reactive({
   departmentId: null as number | null,
   positionId: null as number | null,
   salary: null as number | null,
-  is_active: true
+  is_active: true,
 })
+
 const error = ref('')
+const selectedEmployee = ref<EmployeeLike | null>(null)
+const selectedPosition = ref<PositionLike | null>(null)
 
-const selectedEmployee = ref<Employee | null>(null)
-const selectedPosition = ref<Position | null>(null)
+watch(() => props.visible, async (visible) => {
+  if (visible) {
+    await Promise.all([
+      loadOrganizations(),
+      loadDepartments(),
+    ])
 
-const activeOrganizations = computed(() => props.orgList.filter(o => !o.deleted_at))
+    const p = props.payload
+    if (p) {
+      error.value = ''
 
-const filteredDepartments = computed(() => {
-  if (!form.organizationId) return []
-  return props.departmentList.filter(
-    d => d.id_organization === form.organizationId && !d.deleted_at
-  )
+      form.id = p.id_hr_operation
+      form.salary = p.salary
+      form.is_active = p.is_active
+      form.employeeId = p.id_employee
+      form.departmentId = p.id_department
+      form.positionId = p.id_position
+
+      form.organizationId = departments.value
+        .find(d => d.id_department === p.id_department)?.id_organization ?? null
+
+      if (p.id_employee) {
+        const emp = await getEmployeeById(p.id_employee)
+        if (emp) {
+          selectedEmployee.value = {
+            id_employee: emp.id_employee,
+            last_name: emp.last_name,
+            first_name: emp.first_name,
+            middle_name: emp.middle_name ?? null,
+          }
+        }
+      }
+      if (p.id_position) {
+        const pos = await getPositionById(p.id_position)
+        if (pos) {
+          selectedPosition.value = {
+            id_position: pos.id_position,
+            name: pos.name,
+          }
+        }
+      }
+    }
+  } else {
+    resetForm(true)
+  }
 })
 
-watch(
-  () => props.payload,
-  (p) => {
-    error.value = ''
-
-    if (!p) {
-      resetForm(true)
-      return
-    }
-
-    form.id = p.id_hr_operation
-    form.salary = p.salary
-    form.is_active = p.is_active
-    form.employeeId = p.id_employee
-    form.departmentId = p.id_department
-    form.positionId = p.id_position
-
-    const emp = props.employeeList.find(e => e.id_employee === p.id_employee) ?? null
-    const dept = props.departmentList.find(d => d.id_department === p.id_department) ?? null
-    const pos = props.positionList.find(pos => pos.id_position === p.id_position) ?? null
-
-    selectedEmployee.value = emp
-    selectedPosition.value = pos
-    form.organizationId = dept?.id_organization ?? null
-  },
-  { immediate: true }
+const activeOrganizations = computed(() => organizations.value.filter(o => !o.deleted_at))
+const filteredDepartments = computed(() =>
+  form.organizationId
+    ? departments.value.filter(d => d.id_organization === form.organizationId && !d.deleted_at)
+    : []
 )
+
+watch(selectedEmployee, (emp) => {
+  form.employeeId = emp?.id_employee ?? null
+})
+watch(selectedPosition, (pos) => {
+  form.positionId = pos?.id_position ?? null
+})
 
 function onOrgChange() {
   form.departmentId = null
@@ -145,51 +173,31 @@ function onOrgChange() {
   form.positionId = null
 }
 
-watch(selectedEmployee, (emp) => {
-  form.employeeId = emp?.id_employee ?? null
-})
-
-watch(selectedPosition, (pos) => {
-  form.positionId = pos?.id_position ?? null
-})
-
 function onSalaryInput(e: Event) {
   const input = e.target as HTMLInputElement
-  let val = input.value
-  val = val.replace(/\D/g, '')
-  val = val.replace(/^0+/, '')
-  input.value = val
-  form.salary = val ? Number(val) : null
+  const cleaned = input.value.replace(/\D/g, '').replace(/^0+/, '')
+  input.value = cleaned
+  form.salary = cleaned ? Number(cleaned) : null
 }
 
 function resetForm(clearId = false) {
   if (clearId) form.id = null
 
-  form.employeeId = null
-  form.organizationId = null
-  form.departmentId = null
-  form.positionId = null
-  form.salary = null
+  form.employeeId = form.organizationId = form.departmentId = form.positionId = form.salary = null
   form.is_active = true
-
-  selectedEmployee.value = null
-  selectedPosition.value = null
-
+  selectedEmployee.value = selectedPosition.value = null
   error.value = ''
 }
 
-function hasActiveOperationForEmployee(employeeId: number): boolean {
+function hasActiveOperation(employeeId: number): boolean {
   return props.existingOperations.some(op =>
-    op.id_employee === employeeId &&
-    op.is_active &&
-    op.deleted_at == null &&
-    op.id_hr_operation !== form.id
+    op.id_employee === employeeId && op.is_active && !op.deleted_at && op.id_hr_operation !== form.id
   )
 }
 
 async function submit() {
   error.value = ''
-  if (!form.id && form.employeeId && hasActiveOperationForEmployee(form.employeeId)) {
+  if (!form.id && form.employeeId && hasActiveOperation(form.employeeId)) {
     error.value = 'Этот сотрудник уже работает!'
     return
   }
@@ -200,7 +208,7 @@ async function submit() {
       id_department: form.departmentId ?? undefined,
       id_position: form.positionId ?? undefined,
       salary: form.salary ?? undefined,
-      is_active: form.is_active
+      is_active: form.is_active,
     })
   } catch (e) {
     if (isAxiosError(e)) {
@@ -220,10 +228,9 @@ function onCancel() {
 
 <style scoped>
 .status-row {
-  margin-top: 15px;
+  margin: 15px 0 5px;
 }
 .status-radio-group {
-  margin-top: 5px;
   display: flex;
   gap: 20px;
   align-items: center;
@@ -236,7 +243,6 @@ function onCancel() {
 }
 .status-option input[type='radio'] {
   appearance: none;
-  -webkit-appearance: none;
   width: 16px;
   height: 16px;
   border-radius: 50%;

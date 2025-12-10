@@ -8,6 +8,11 @@ export interface HrOperation {
   created_at: Date
   updated_at?: Date | null
   deleted_at?: Date | null
+
+  employee_name?: string
+  organization_name?: string
+  department_name?: string
+  position_name?: string
 }
 
 export interface HrOperationSave {
@@ -17,11 +22,4 @@ export interface HrOperationSave {
   id_position?: number
   salary?: number
   is_active?: boolean
-}
-
-export interface HrOperationView extends HrOperation {
-  employeeName: string
-  organizationName: string
-  departmentName: string
-  positionName: string
 }

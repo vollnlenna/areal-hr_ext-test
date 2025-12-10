@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -33,6 +34,23 @@ export class PositionsController {
       throw new InternalServerErrorException(
         'Ошибка при получении удаленных должностей',
       );
+    }
+  }
+
+  @Get('search')
+  async searchPositions(
+    @Query('q') query = '',
+    @Query('limit') limit = '5',
+    @Query('offset') offset = '0',
+  ) {
+    try {
+      return await this.positionsService.search(
+        query ?? '',
+        Number(limit),
+        Number(offset),
+      );
+    } catch {
+      throw new InternalServerErrorException('Ошибка при поиске должностей');
     }
   }
 

@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -35,6 +36,23 @@ export class EmployeesController {
       throw new InternalServerErrorException(
         'Ошибка при получении удаленных сотрудников',
       );
+    }
+  }
+
+  @Get('search')
+  async searchEmployees(
+    @Query('q') query = '',
+    @Query('limit') limit = '5',
+    @Query('offset') offset = '0',
+  ) {
+    try {
+      return await this.employeesService.search(
+        query ?? '',
+        Number(limit),
+        Number(offset),
+      );
+    } catch {
+      throw new InternalServerErrorException('Ошибка при поиске сотрудников');
     }
   }
 

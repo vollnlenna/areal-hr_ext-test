@@ -1,27 +1,29 @@
 <template>
   <div class="card" style="height: 450px">
     <div class="card-body">
-      <div class="card-title">{{ row.employeeName }}</div>
+      <div class="card-title">
+        {{ formatEmployeeName(row.employee_name) }}
+      </div>
 
       <div class="sep" />
 
       <div class="card-comment">
         <div class="comment-label">Организация:</div>
-        <div class="comment-content">{{ row.organizationName }}</div>
+        <div class="comment-content">{{ row.organization_name || '[Не найдена]' }}</div>
       </div>
 
       <div class="sep" />
 
       <div class="card-comment">
         <div class="comment-label">Отдел:</div>
-        <div class="comment-content">{{ row.departmentName }}</div>
+        <div class="comment-content">{{ row.department_name || '[Не найден]' }}</div>
       </div>
 
       <div class="sep" />
 
       <div class="card-comment">
         <div class="comment-label">Должность:</div>
-        <div class="comment-content">{{ row.positionName }}</div>
+        <div class="comment-content">{{ row.position_name || '[Не найдена]' }}</div>
       </div>
 
       <div class="sep" />
@@ -60,13 +62,13 @@
 </template>
 
 <script setup lang="ts">
-import type { HrOperationView } from '@/entities/hrOperation.ts'
+import type { HrOperation } from '@/entities/hrOperation.ts'
 
-const props = defineProps<{ row: HrOperationView }>()
+const props = defineProps<{ row: HrOperation }>()
 const emit = defineEmits<{
-  (e: 'edit', row: HrOperationView): void
-  (e: 'delete', row: HrOperationView): void
-  (e: 'restore', row: HrOperationView): void
+  (e: 'edit', row: HrOperation): void
+  (e: 'delete', row: HrOperation): void
+  (e: 'restore', row: HrOperation): void
 }>()
 
 function onDelete() {
@@ -77,6 +79,13 @@ function onDelete() {
 function onRestore() {
   if (!confirm('Восстановить эту запись?')) return
   emit('restore', props.row)
+}
+
+function formatEmployeeName(val: unknown): string {
+  if (!val || String(val).trim() === '' || val === 'null') {
+    return '[Сотрудник не найден]'
+  }
+  return String(val)
 }
 
 function formatDate(val: unknown) {

@@ -15,6 +15,26 @@ export function usePositions() {
     deletedList.value = deletedRes.data
   }
 
+  const searchPositions = async (
+    q: string,
+    limit = 5,
+    offset = 0,
+  ): Promise<{ items: Position[]; hasMore: boolean }> => {
+    const res = await http.get('/positions/search', {
+      params: {
+        q,
+        limit: Number(limit),
+        offset: Number(offset),
+      },
+    })
+    return res.data as { items: Position[]; hasMore: boolean }
+  }
+
+  const getPositionById = async (id: number): Promise<Position | null> => {
+    const res = await http.get<Position>(`/positions/${id}`)
+    return res.data ?? null
+  }
+
   const savePosition = async (payload: PositionSave) => {
     const body = { name: payload.name }
     if (payload.id_position) {
@@ -39,6 +59,8 @@ export function usePositions() {
     actualList: computed(() => actualList.value),
     deletedList: computed(() => deletedList.value),
     loadPositions,
+    searchPositions,
+    getPositionById,
     savePosition,
     deletePosition,
     restorePosition
