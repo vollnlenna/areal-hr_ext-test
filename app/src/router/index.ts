@@ -5,6 +5,7 @@ import positions from '../pages/PositionsPage.vue';
 import employees from '../pages/EmployeesPage.vue';
 import hrOperations from '../pages/HrOperationsPage.vue';
 import changeHistory from '../pages/ChangeHistoryPage.vue';
+import users from '../pages/UsersPage.vue';
 
 const routes = [
   { path: '/', redirect: '/organizations' },
@@ -13,7 +14,8 @@ const routes = [
   { path: '/positions', component: positions },
   { path: '/employees', component: employees },
   { path: '/hrOperations', component: hrOperations },
-  { path: '/change-history', component: changeHistory }
+  { path: '/change-history', component: changeHistory },
+  { path: '/users', component: users }
 ];
 
 export default createRouter({

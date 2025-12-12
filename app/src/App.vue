@@ -7,6 +7,7 @@
       <router-link to="/employees" class="tab" :class="{ active: $route.path === '/employees' }">Сотрудники</router-link>
       <router-link to="/hrOperations" class="tab" :class="{ active: $route.path === '/hrOperations' }">Кадровые операции</router-link>
       <router-link to="/change-history" class="tab" :class="{ active: $route.path === '/change-history' }">История изменений</router-link>
+      <router-link to="/users" class="tab" :class="{ active: $route.path === '/users' }">Пользователи</router-link>
     </nav>
 
     <router-view />
