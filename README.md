@@ -31,9 +31,9 @@
     <pre><code>cp .env.example .env</code></pre>
   </li>
   <li><strong>Запустить приложение:</strong><br>
-    <pre><code>docker-compose up -d --build</code></pre>
+    <pre><code>docker compose up</code></pre>
   </li>
   <li><strong>Открыть веб-приложение в браузере:</strong><br>
-    <a href="http://localhost:3001" target="_blank">http://localhost:3001</a>
+    <a href="http://localhost" target="_blank">http://localhost</a>
   </li>
 </ol>
