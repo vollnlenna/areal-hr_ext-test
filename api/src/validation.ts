@@ -117,3 +117,63 @@ export const validateFile = Joi.object({
     'any.required': 'Имя файла обязательно',
   }),
 });
+
+export const validateUser = Joi.object({
+  last_name: Joi.string().min(2).max(100).required().messages({
+    'string.empty': 'Фамилия обязательна',
+    'string.min': 'Фамилия должна содержать минимум 2 символа',
+    'string.max': 'Фамилия должна содержать не более 100 символов',
+    'any.required': 'Фамилия обязательна',
+  }),
+
+  first_name: Joi.string().min(2).max(100).required().messages({
+    'string.empty': 'Имя обязательно',
+    'string.min': 'Имя должно содержать минимум 2 символа',
+    'string.max': 'Имя должно содержать не более 100 символов',
+    'any.required': 'Имя обязательно',
+  }),
+
+  middle_name: Joi.string()
+    .min(2)
+    .max(100)
+    .allow(null, '')
+    .optional()
+    .messages({
+      'string.min': 'Отчество должно содержать минимум 2 символа',
+      'string.max': 'Отчество должно содержать не более 100 символов',
+    }),
+
+  login: Joi.string()
+    .min(6)
+    .max(100)
+    .pattern(/^[a-zA-Z]+$/)
+    .required()
+    .messages({
+      'string.empty': 'Логин обязателен',
+      'string.min': 'Логин должен содержать минимум 6 символов',
+      'string.max': 'Логин должен содержать не более 100 символов',
+      'string.pattern.base': 'Логин должен содержать только латинские буквы',
+      'any.required': 'Логин обязателен',
+    }),
+
+  id_role: Joi.number().required().messages({
+    'number.base': 'Роль обязательна',
+    'any.required': 'Роль обязательна',
+  }),
+});
+
+export const validatePassword = Joi.object({
+  password: Joi.string()
+    .min(8)
+    .max(100)
+    .pattern(/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/)
+    .required()
+    .messages({
+      'string.empty': 'Пароль обязателен',
+      'string.min': 'Пароль должен содержать минимум 8 символов',
+      'string.max': 'Пароль не должен превышать 100 символов',
+      'string.pattern.base':
+        'Пароль должен содержать только латинские буквы и хотя бы одну цифру',
+      'any.required': 'Пароль обязателен',
+    }),
+});
