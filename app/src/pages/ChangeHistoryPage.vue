@@ -76,10 +76,15 @@ function formatValue(
 
   if (field?.startsWith('id_')) return val
 
-  const parsed = new Date(val)
-  const isValidDate = !isNaN(parsed.getTime())
+  const dateFields = new Set([
+    'birth_date',
+    'passport_issue_date',
+    'deleted_at'
+  ])
+  if (!dateFields.has(field ?? '')) return val
 
-  if (isValidDate) {
+  const parsed = new Date(val)
+  if (!isNaN(parsed.getTime())) {
     if (field === 'deleted_at') {
       return parsed.toLocaleString('ru-RU')
     }

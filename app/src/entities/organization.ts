@@ -2,6 +2,8 @@ export interface Organization {
   id_organization: number
   name: string
   comment?: string | null
+  created_at: string
+  updated_at?: string | null
   deleted_at?: string | null
 }
 

@@ -4,6 +4,7 @@ export interface FileRecord {
   file_path: string
   created_at: string
   updated_at?: string | null
+  deleted_at?: string | null
 }
 
 export interface FileUploadResponse {

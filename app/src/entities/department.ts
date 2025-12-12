@@ -4,6 +4,8 @@ export interface Department {
   id_organization: number
   id_parent_department?: number | null
   comment?: string | null
+  created_at: string
+  updated_at?: string | null
   deleted_at?: string | null
 }
 

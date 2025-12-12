@@ -366,7 +366,7 @@ function buildRegistrationAddress(): string {
   const house = address.house.trim()
   const flat = address.apartment.trim()
 
-  if (!region || !locality || !street || !house || !flat) {
+  if (!region || !locality || !street || !house) {
     return ''
   }
 
