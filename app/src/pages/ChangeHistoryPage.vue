@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="top-row">
+    <div class="search-row top">
       <input
         v-model="searchQuery"
         class="search-input"
@@ -119,18 +119,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.top-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 15px;
-}
-.top-row select,
-.top-row input {
-  padding: 8px;
-  margin: 0;
-  border-radius: 8px;
-}
 .object-select {
   width: 220px;
 }

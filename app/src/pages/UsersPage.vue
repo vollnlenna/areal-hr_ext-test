@@ -1,12 +1,18 @@
 <template>
   <div class="page">
-    <div class="search-row">
+    <div class="search-row top">
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Поиск по ФИО пользователя..."
         class="search-input"
       />
+
+      <select v-model="roleFilter" class="role-select">
+        <option value="all">Все пользователи</option>
+        <option value="admin">Администраторы</option>
+        <option value="manager">Менеджеры</option>
+      </select>
 
       <label class="checkbox-label">
         <input
@@ -77,6 +83,7 @@ const {
 
 const searchQuery = ref('')
 const showDeleted = ref(false)
+const roleFilter = ref<'all' | 'admin' | 'manager'>('all')
 
 const currentList = computed(() =>
   showDeleted.value ? deletedList.value : actualList.value
@@ -84,10 +91,22 @@ const currentList = computed(() =>
 
 const filtered = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  if (!q) return currentList.value
-  return currentList.value.filter(d =>
-    `${d.last_name} ${d.first_name} ${d.middle_name ?? ''}`.toLowerCase().includes(q)
-  )
+  return currentList.value
+    .filter(user => {
+      if (roleFilter.value === 'admin') {
+        return user.id_role === 1
+      }
+      if (roleFilter.value === 'manager') {
+        return user.id_role === 2
+      }
+      return true
+    })
+    .filter(user => {
+      if (!q) return true
+      const fio = `${user.last_name} ${user.first_name} ${user.middle_name ?? ''}`
+        .toLowerCase()
+      return fio.includes(q)
+    })
 })
 
 onMounted(async () => {
@@ -137,3 +156,9 @@ function closePasswordModal() {
   passwordModal.userId = null
 }
 </script>
+
+<style scoped>
+.role-select {
+  width: 260px;
+}
+</style>
