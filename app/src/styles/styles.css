@@ -38,6 +38,8 @@ nav {
   font-weight: bold;
 }
 .tab:hover, .tab.active { background:#000; color:#fff; }
+.logout { color: red; border: 3px solid red; }
+.logout:hover { background: red; color: #fff; }
 
 .page { padding: 8px 0; }
 .page-controls { margin-bottom: 12px;

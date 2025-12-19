@@ -34,7 +34,7 @@
             <button class="icon-btn" title="Переименовать" :disabled="!selectedId" @click="selectedId && $emit('sub-rename', selectedId!)">
               <Icon icon="mdi:pencil-outline" width="16" />
             </button>
-            <button class="icon-btn" title="Удалить" :disabled="!selectedId" @click="selectedId && onDeleteSub(selectedId!)">
+            <button v-if="isAdmin" class="icon-btn" title="Удалить" :disabled="!selectedId" @click="selectedId && onDeleteSub(selectedId!)">
               <Icon icon="mdi:trash-can-outline" width="16" />
             </button>
           </div>
@@ -74,14 +74,14 @@
 
       <div class="card-actions">
         <button class="btn-edit" :disabled="!!row.deleted_at" @click="$emit('edit', row)">Изменить</button>
-        <button class="btn-delete" :disabled="!!row.deleted_at" @click="onDeleteCard">Удалить</button>
+        <button v-if="isAdmin" class="btn-delete" :disabled="!!row.deleted_at" @click="onDeleteCard">Удалить</button>
       </div>
     </div>
 
     <div v-if="row.deleted_at" class="deleted-overlay">
       <div class="deleted-content">
         <div>Удалено: {{ formatDate(row.deleted_at) }}</div>
-        <button class="btn-restore" @click="onRestore">Восстановить</button>
+        <button v-if="isAdmin" class="btn-restore" @click="onRestore">Восстановить</button>
       </div>
     </div>
   </div>
@@ -92,6 +92,9 @@ import { computed, ref, watch, watchEffect } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Department } from '@/entities/department.ts'
 import type { Organization } from '@/entities/organization.ts'
+import { useAuth } from '@/composables/useAuth'
+
+const { isAdmin } = useAuth();
 
 type FlatItem = { id: number; name: string; level: number; hasChildren: boolean }
 

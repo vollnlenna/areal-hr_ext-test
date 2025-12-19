@@ -13,7 +13,7 @@ export interface User {
   created_at: string
   updated_at?: string | null
   deleted_at?: string | null
-  fullName: string
+  fullName?: string;
 }
 
 export interface UserSave {

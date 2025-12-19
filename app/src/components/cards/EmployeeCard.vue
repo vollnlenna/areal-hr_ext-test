@@ -48,7 +48,7 @@
                   {{ scan.file_name }}
                 </a>
               </div>
-              <button class="icon-btn" title="Удалить скан" @click="onDeleteScan(scan)" :disabled="!!row.deleted_at">
+              <button v-if="isAdmin" class="icon-btn" title="Удалить скан" @click="onDeleteScan(scan)" :disabled="!!row.deleted_at">
                 <Icon icon="mdi:close" width="14" />
               </button>
             </li>
@@ -60,14 +60,14 @@
 
       <div class="card-actions">
         <button class="btn-edit" :disabled="!!row.deleted_at" @click="$emit('edit', row)">Изменить</button>
-        <button class="btn-delete" :disabled="!!row.deleted_at" @click="onDeleteCard">Удалить</button>
+        <button v-if="isAdmin" class="btn-delete" :disabled="!!row.deleted_at" @click="onDeleteCard">Удалить</button>
       </div>
     </div>
 
     <div v-if="row.deleted_at" class="deleted-overlay">
       <div class="deleted-content">
         <div>Удалено: {{ formatDateTime(row.deleted_at) }}</div>
-        <button class="btn-restore" @click="onRestore">Восстановить</button>
+        <button v-if="isAdmin" class="btn-restore" @click="onRestore">Восстановить</button>
       </div>
     </div>
 
@@ -86,6 +86,9 @@ import { Icon } from '@iconify/vue'
 import http from '../../api/http'
 import ScanModal from '../modals/ScanModal.vue'
 import type { Employee, PassportScan } from '@/entities/employee.ts'
+import { useAuth } from '@/composables/useAuth'
+
+const { isAdmin } = useAuth();
 
 const props = defineProps<{ row: Employee }>()
 const emit = defineEmits<{

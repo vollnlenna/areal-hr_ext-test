@@ -17,14 +17,14 @@
 
       <div class="card-actions">
         <button class="btn-edit" :disabled="!!row.deleted_at" @click="$emit('edit', row)">Изменить</button>
-        <button class="btn-delete" :disabled="!!row.deleted_at" @click="onDelete">Удалить</button>
+        <button v-if="isAdmin" class="btn-delete" :disabled="!!row.deleted_at" @click="onDelete">Удалить</button>
       </div>
     </div>
 
     <div v-if="row.deleted_at" class="deleted-overlay">
       <div class="deleted-content">
         <div>Удалено: {{ formatDate(row.deleted_at) }}</div>
-        <button class="btn-restore" @click="onRestore">Восстановить</button>
+        <button v-if="isAdmin" class="btn-restore" @click="onRestore">Восстановить</button>
       </div>
     </div>
   </div>
@@ -32,6 +32,9 @@
 
 <script setup lang="ts">
 import type { Organization } from '@/entities/organization.ts'
+import { useAuth } from '@/composables/useAuth'
+
+const { isAdmin } = useAuth();
 
 const props = defineProps<{ row: Organization }>()
 const emit = defineEmits<{
