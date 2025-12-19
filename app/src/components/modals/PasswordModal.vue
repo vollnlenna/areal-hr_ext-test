@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { isAxiosError } from 'axios'
 import { Icon } from '@iconify/vue'
 
@@ -52,11 +52,25 @@ const newPassword = ref('')
 const error = ref('')
 const showPassword = ref(false)
 
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      newPassword.value = ''
+      error.value = ''
+      showPassword.value = false
+    }
+  }
+)
+
 async function submit() {
   error.value = ''
 
   try {
     await props.changePassword(props.userId!, newPassword.value)
+    newPassword.value = ''
+    error.value = ''
+    showPassword.value = false
     emit('saved')
   } catch (e) {
     if (isAxiosError(e)) {
@@ -71,6 +85,7 @@ async function submit() {
 function onCancel() {
   newPassword.value = ''
   error.value = ''
+  showPassword.value = false
   emit('cancel')
 }
 </script>
