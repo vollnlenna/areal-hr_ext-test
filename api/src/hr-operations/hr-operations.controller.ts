@@ -11,8 +11,13 @@ import {
 } from '@nestjs/common';
 import { HrOperationsService, HrOperation } from './hr-operations.service';
 import { validateHrOperation } from '../validation';
+import { Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('hr-operations')
+@UseGuards(AuthGuard)
 export class HrOperationsController {
   constructor(private readonly hrOperationsService: HrOperationsService) {}
 
@@ -59,12 +64,14 @@ export class HrOperationsController {
       salary: number;
       is_active?: boolean;
     },
+    @Req() req: Request,
   ): Promise<HrOperation> {
+    const user = req.user as { id_user: number };
     const { error } = validateHrOperation.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.hrOperationsService.create(data);
+      return await this.hrOperationsService.create(data, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при создании кадровой операции',
@@ -82,12 +89,14 @@ export class HrOperationsController {
       salary?: number;
       is_active?: boolean;
     },
+    @Req() req: Request,
   ): Promise<HrOperation | null> {
+    const user = req.user as { id_user: number };
     const { error } = validateHrOperation.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.hrOperationsService.update(id, data);
+      return await this.hrOperationsService.update(id, data, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при обновлении кадровой операции',
@@ -96,9 +105,13 @@ export class HrOperationsController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number): Promise<HrOperation | null> {
+  async delete(
+    @Param('id') id: number,
+    @Req() req: Request,
+  ): Promise<HrOperation | null> {
+    const user = req.user as { id_user: number };
     try {
-      return await this.hrOperationsService.delete(id);
+      return await this.hrOperationsService.delete(id, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при удалении кадровой операции',
@@ -107,9 +120,13 @@ export class HrOperationsController {
   }
 
   @Patch('restore/:id')
-  async restore(@Param('id') id: number): Promise<HrOperation | null> {
+  async restore(
+    @Param('id') id: number,
+    @Req() req: Request,
+  ): Promise<HrOperation | null> {
+    const user = req.user as { id_user: number };
     try {
-      return await this.hrOperationsService.restore(id);
+      return await this.hrOperationsService.restore(id, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при восстановлении кадровой операции',

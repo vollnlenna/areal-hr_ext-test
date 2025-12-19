@@ -27,15 +27,14 @@ interface LogChangeParams<T extends Record<string, unknown>> {
   entity: EntityType;
   oldRow: T;
   newRow: T;
-  id_user?: number;
+  id_user: number;
 }
 
 export async function logEntityChanges<T extends Record<string, unknown>>(
   history: ChangeHistoryService,
   params: LogChangeParams<T>,
 ): Promise<void> {
-  const { entity, oldRow, newRow } = params;
-  const id_user = params.id_user != null ? params.id_user : 1; //пока авторизации нет, то будет id_user=1
+  const { entity, oldRow, newRow, id_user } = params;
 
   const idKey = idKeys[entity];
 

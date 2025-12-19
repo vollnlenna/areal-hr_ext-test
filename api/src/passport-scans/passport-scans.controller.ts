@@ -6,10 +6,13 @@ import {
   Param,
   Body,
   InternalServerErrorException,
+  UseGuards,
 } from '@nestjs/common';
 import { PassportScansService, PassportScan } from './passport-scans.service';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('passport-scans')
+@UseGuards(AuthGuard)
 export class PassportScansController {
   constructor(private readonly passportScansService: PassportScansService) {}
 

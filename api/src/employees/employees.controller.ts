@@ -12,8 +12,13 @@ import {
 } from '@nestjs/common';
 import { EmployeesService, Employee } from './employees.service';
 import { validateEmployee } from '../validation';
+import { Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('employees')
+@UseGuards(AuthGuard)
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
@@ -76,12 +81,14 @@ export class EmployeesController {
       passport_data: string;
       registration_address: string;
     },
+    @Req() req: Request,
   ): Promise<Employee> {
+    const user = req.user as { id_user: number };
     const { error } = validateEmployee.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.employeesService.create(data);
+      return await this.employeesService.create(data, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при создании сотрудника');
     }
@@ -99,12 +106,14 @@ export class EmployeesController {
       passport_data?: string;
       registration_address?: string;
     },
+    @Req() req: Request,
   ): Promise<Employee | null> {
+    const user = req.user as { id_user: number };
     const { error } = validateEmployee.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.employeesService.update(id, data);
+      return await this.employeesService.update(id, data, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при обновлении сотрудника',
@@ -113,18 +122,26 @@ export class EmployeesController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number): Promise<Employee | null> {
+  async delete(
+    @Param('id') id: number,
+    @Req() req: Request,
+  ): Promise<Employee | null> {
+    const user = req.user as { id_user: number };
     try {
-      return await this.employeesService.delete(id);
+      return await this.employeesService.delete(id, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при удалении сотрудника');
     }
   }
 
   @Patch('restore/:id')
-  async restore(@Param('id') id: number): Promise<Employee | null> {
+  async restore(
+    @Param('id') id: number,
+    @Req() req: Request,
+  ): Promise<Employee | null> {
+    const user = req.user as { id_user: number };
     try {
-      return await this.employeesService.restore(id);
+      return await this.employeesService.restore(id, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при восстановлении сотрудника',

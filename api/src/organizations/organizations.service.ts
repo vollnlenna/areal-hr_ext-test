@@ -43,10 +43,10 @@ export class OrganizationsService {
     return result.rows[0] ?? null;
   }
 
-  async create(data: {
-    name: string;
-    comment?: string | null;
-  }): Promise<Organization> {
+  async create(
+    data: { name: string; comment?: string | null },
+    id_user: number,
+  ): Promise<Organization> {
     const result: QueryResult<Organization> = await this.pgPool.query(
       `
         insert into organizations (name, comment, created_at, updated_at)
@@ -60,6 +60,7 @@ export class OrganizationsService {
       entity: 'organization',
       oldRow: {} as Organization,
       newRow: created,
+      id_user,
     });
     return created;
   }
@@ -67,6 +68,7 @@ export class OrganizationsService {
   async update(
     id: number,
     data: { name?: string; comment?: string | null },
+    id_user: number,
   ): Promise<Organization | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
@@ -88,12 +90,13 @@ export class OrganizationsService {
         entity: 'organization',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async delete(id: number): Promise<Organization | null> {
+  async delete(id: number, id_user: number): Promise<Organization | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -112,12 +115,13 @@ export class OrganizationsService {
         entity: 'organization',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async restore(id: number): Promise<Organization | null> {
+  async restore(id: number, id_user: number): Promise<Organization | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -134,6 +138,7 @@ export class OrganizationsService {
         entity: 'organization',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;

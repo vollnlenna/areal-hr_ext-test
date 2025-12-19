@@ -47,14 +47,17 @@ export class EmployeesService {
     return result.rows[0] ?? null;
   }
 
-  async create(data: {
-    last_name: string;
-    first_name: string;
-    middle_name?: string;
-    birth_date: string;
-    passport_data: string;
-    registration_address: string;
-  }): Promise<Employee> {
+  async create(
+    data: {
+      last_name: string;
+      first_name: string;
+      middle_name?: string;
+      birth_date: string;
+      passport_data: string;
+      registration_address: string;
+    },
+    id_user: number,
+  ): Promise<Employee> {
     const result: QueryResult<Employee> = await this.pgPool.query(
       `insert into employees (last_name, first_name, middle_name, birth_date, passport_data, registration_address, created_at, updated_at)
        values ($1, $2, $3, $4, $5, $6, now(), now())
@@ -73,6 +76,7 @@ export class EmployeesService {
       entity: 'employee',
       oldRow: {} as Employee,
       newRow: created,
+      id_user,
     });
     return created;
   }
@@ -87,6 +91,7 @@ export class EmployeesService {
       passport_data?: string;
       registration_address?: string;
     },
+    id_user: number,
   ): Promise<Employee | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
@@ -101,7 +106,7 @@ export class EmployeesService {
            registration_address = coalesce($7, registration_address),
            updated_at = now()
        where id_employee = $1
-       returning *`,
+         returning *`,
       [
         id,
         data.last_name,
@@ -118,12 +123,13 @@ export class EmployeesService {
         entity: 'employee',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async delete(id: number): Promise<Employee | null> {
+  async delete(id: number, id_user: number): Promise<Employee | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -131,7 +137,7 @@ export class EmployeesService {
       `update employees
        set deleted_at = now()
        where id_employee = $1
-       returning *`,
+         returning *`,
       [id],
     );
     const newRow = result.rows[0];
@@ -140,12 +146,13 @@ export class EmployeesService {
         entity: 'employee',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async restore(id: number): Promise<Employee | null> {
+  async restore(id: number, id_user: number): Promise<Employee | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -153,7 +160,7 @@ export class EmployeesService {
       `update employees
        set deleted_at = null
        where id_employee = $1 and deleted_at is not null
-       returning *`,
+         returning *`,
       [id],
     );
     const newRow = result.rows[0];
@@ -162,6 +169,7 @@ export class EmployeesService {
         entity: 'employee',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
@@ -188,7 +196,7 @@ export class EmployeesService {
        where deleted_at is null
          and lower(last_name || ' ' || first_name || coalesce(middle_name, '')) like $1
        offset $2
-       limit 1`,
+         limit 1`,
       [q, offset + limit],
     );
     return {

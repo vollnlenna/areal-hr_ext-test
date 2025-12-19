@@ -10,6 +10,7 @@ import {
   InternalServerErrorException,
   Body,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FilesService, File } from './files.service';
@@ -18,8 +19,10 @@ import { validateFile } from '../validation';
 import type { Response } from 'express';
 import { join } from 'path';
 import * as fs from 'fs';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('files')
+@UseGuards(AuthGuard)
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 

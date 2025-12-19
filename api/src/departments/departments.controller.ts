@@ -11,8 +11,13 @@ import {
 } from '@nestjs/common';
 import { DepartmentsService, Department } from './departments.service';
 import { validateDepartment } from '../validation';
+import { Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('departments')
+@UseGuards(AuthGuard)
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
@@ -54,12 +59,14 @@ export class DepartmentsController {
       id_parent_department?: number | null;
       comment?: string | null;
     },
-  ): Promise<Department> {
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id_user: number };
     const { error } = validateDepartment.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.departmentsService.create(data);
+      return await this.departmentsService.create(data, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при создании отдела');
     }
@@ -75,30 +82,34 @@ export class DepartmentsController {
       id_parent_department?: number | null;
       comment?: string | null;
     },
-  ): Promise<Department | null> {
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id_user: number };
     const { error } = validateDepartment.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.departmentsService.update(id, data);
+      return await this.departmentsService.update(id, data, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при обновлении отдела');
     }
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number): Promise<Department | null> {
+  async delete(@Param('id') id: number, @Req() req: Request) {
+    const user = req.user as { id_user: number };
     try {
-      return await this.departmentsService.delete(id);
+      return await this.departmentsService.delete(id, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при удалении отдела');
     }
   }
 
   @Patch('restore/:id')
-  async restore(@Param('id') id: number): Promise<Department | null> {
+  async restore(@Param('id') id: number, @Req() req: Request) {
+    const user = req.user as { id_user: number };
     try {
-      return await this.departmentsService.restore(id);
+      return await this.departmentsService.restore(id, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при восстановлении отдела',

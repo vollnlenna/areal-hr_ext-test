@@ -42,7 +42,7 @@ export class PositionsService {
     return result.rows[0] ?? null;
   }
 
-  async create(data: { name: string }): Promise<Position> {
+  async create(data: { name: string }, id_user: number): Promise<Position> {
     const result: QueryResult<Position> = await this.pgPool.query(
       `insert into positions (name, created_at, updated_at)
        values ($1, now(), now()) returning *`,
@@ -53,11 +53,16 @@ export class PositionsService {
       entity: 'position',
       oldRow: {} as Position,
       newRow: created,
+      id_user,
     });
     return created;
   }
 
-  async update(id: number, data: { name?: string }): Promise<Position | null> {
+  async update(
+    id: number,
+    data: { name?: string },
+    id_user: number,
+  ): Promise<Position | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -66,7 +71,7 @@ export class PositionsService {
        set name = coalesce($2, name),
            updated_at = now()
        where id_position = $1
-       returning *`,
+         returning *`,
       [id, data.name],
     );
     const newRow = result.rows[0];
@@ -75,12 +80,13 @@ export class PositionsService {
         entity: 'position',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async delete(id: number): Promise<Position | null> {
+  async delete(id: number, id_user: number): Promise<Position | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -88,7 +94,7 @@ export class PositionsService {
       `update positions
        set deleted_at = now()
        where id_position = $1
-       returning *`,
+         returning *`,
       [id],
     );
     const newRow = result.rows[0];
@@ -97,12 +103,13 @@ export class PositionsService {
         entity: 'position',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async restore(id: number): Promise<Position | null> {
+  async restore(id: number, id_user: number): Promise<Position | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -110,7 +117,7 @@ export class PositionsService {
       `update positions
        set deleted_at = null
        where id_position = $1 and deleted_at is not null
-       returning *`,
+         returning *`,
       [id],
     );
     const newRow = result.rows[0];
@@ -119,6 +126,7 @@ export class PositionsService {
         entity: 'position',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
@@ -145,7 +153,7 @@ export class PositionsService {
        where deleted_at is null
          and lower(name) like $1
        offset $2
-       limit 1`,
+         limit 1`,
       [q, offset + limit],
     );
     return {

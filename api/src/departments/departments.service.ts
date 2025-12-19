@@ -45,12 +45,15 @@ export class DepartmentsService {
     return result.rows[0] ?? null;
   }
 
-  async create(data: {
-    name: string;
-    id_organization: number;
-    id_parent_department?: number | null;
-    comment?: string | null;
-  }): Promise<Department> {
+  async create(
+    data: {
+      name: string;
+      id_organization: number;
+      id_parent_department?: number | null;
+      comment?: string | null;
+    },
+    id_user: number,
+  ): Promise<Department> {
     const result: QueryResult<Department> = await this.pgPool.query(
       `insert into departments (name, id_organization, id_parent_department, comment, created_at, updated_at)
        values ($1, $2, $3, $4, now(), now()) returning *`,
@@ -66,6 +69,7 @@ export class DepartmentsService {
       entity: 'department',
       oldRow: {} as Department,
       newRow: created,
+      id_user,
     });
     return created;
   }
@@ -78,6 +82,7 @@ export class DepartmentsService {
       id_parent_department?: number | null;
       comment?: string | null;
     },
+    id_user: number,
   ): Promise<Department | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
@@ -105,12 +110,13 @@ export class DepartmentsService {
         entity: 'department',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async delete(id: number): Promise<Department | null> {
+  async delete(id: number, id_user: number): Promise<Department | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -118,7 +124,7 @@ export class DepartmentsService {
       `update departments
        set deleted_at = now()
        where id_department = $1
-       returning *`,
+         returning *`,
       [id],
     );
     const newRow = result.rows[0];
@@ -127,12 +133,13 @@ export class DepartmentsService {
         entity: 'department',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async restore(id: number): Promise<Department | null> {
+  async restore(id: number, id_user: number): Promise<Department | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -140,7 +147,7 @@ export class DepartmentsService {
       `update departments
        set deleted_at = null
        where id_department = $1 and deleted_at is not null
-       returning *`,
+         returning *`,
       [id],
     );
     const newRow = result.rows[0];
@@ -149,6 +156,7 @@ export class DepartmentsService {
         entity: 'department',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;

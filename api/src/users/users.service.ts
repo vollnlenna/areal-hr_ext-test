@@ -41,6 +41,14 @@ export class UsersService {
     return result.rows[0] ?? null;
   }
 
+  async getByLogin(login: string): Promise<User | null> {
+    const result: QueryResult<User> = await this.pgPool.query<User>(
+      `select * from users where login = $1 and deleted_at is null`,
+      [login],
+    );
+    return result.rows[0] ?? null;
+  }
+
   async create(data: {
     last_name: string;
     first_name: string;

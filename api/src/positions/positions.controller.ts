@@ -12,8 +12,13 @@ import {
 } from '@nestjs/common';
 import { PositionsService, Position } from './positions.service';
 import { validatePosition } from '../validation';
+import { Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('positions')
+@UseGuards(AuthGuard)
 export class PositionsController {
   constructor(private readonly positionsService: PositionsService) {}
 
@@ -64,12 +69,16 @@ export class PositionsController {
   }
 
   @Post()
-  async create(@Body() data: { name: string }): Promise<Position> {
+  async create(
+    @Body() data: { name: string },
+    @Req() req: Request,
+  ): Promise<Position> {
+    const user = req.user as { id_user: number };
     const { error } = validatePosition.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.positionsService.create(data);
+      return await this.positionsService.create(data, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при создании должности');
     }
@@ -80,30 +89,40 @@ export class PositionsController {
     @Param('id') id: number,
     @Body()
     data: { name?: string },
+    @Req() req: Request,
   ): Promise<Position | null> {
+    const user = req.user as { id_user: number };
     const { error } = validatePosition.validate(data);
     if (error) throw new BadRequestException(error.message);
 
     try {
-      return await this.positionsService.update(id, data);
+      return await this.positionsService.update(id, data, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при обновлении должности');
     }
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number): Promise<Position | null> {
+  async delete(
+    @Param('id') id: number,
+    @Req() req: Request,
+  ): Promise<Position | null> {
+    const user = req.user as { id_user: number };
     try {
-      return await this.positionsService.delete(id);
+      return await this.positionsService.delete(id, user.id_user);
     } catch {
       throw new InternalServerErrorException('Ошибка при удалении должности');
     }
   }
 
   @Patch('restore/:id')
-  async restore(@Param('id') id: number) {
+  async restore(
+    @Param('id') id: number,
+    @Req() req: Request,
+  ): Promise<Position | null> {
+    const user = req.user as { id_user: number };
     try {
-      return await this.positionsService.restore(id);
+      return await this.positionsService.restore(id, user.id_user);
     } catch {
       throw new InternalServerErrorException(
         'Ошибка при восстановлении должности',

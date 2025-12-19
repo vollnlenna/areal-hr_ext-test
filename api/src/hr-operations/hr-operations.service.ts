@@ -35,15 +35,15 @@ export class HrOperationsService {
         op.*,
         concat(e.last_name, ' ', e.first_name, ' ', coalesce(e.middle_name, '')) as employee_name,
         o.name as organization_name,
-        d.name as department_name, 
+        d.name as department_name,
         p.name as position_name
       from hr_operations op
-      left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
-      left join departments d on d.id_department = op.id_department and d.deleted_at is null
-      left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
-      left join positions p on p.id_position = op.id_position and p.deleted_at is null
-      where op.deleted_at is null 
-      order by op.id_hr_operation desc 
+             left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
+             left join departments d on d.id_department = op.id_department and d.deleted_at is null
+             left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
+             left join positions p on p.id_position = op.id_position and p.deleted_at is null
+      where op.deleted_at is null
+      order by op.id_hr_operation desc
     `;
 
     const result: QueryResult<HrOperation> = await this.pgPool.query(query);
@@ -59,12 +59,12 @@ export class HrOperationsService {
         d.name as department_name,
         p.name as position_name
       from hr_operations op
-      left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
-      left join departments d on d.id_department = op.id_department and d.deleted_at is null
-      left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
-      left join positions p on p.id_position = op.id_position and p.deleted_at is null
-      where op.deleted_at is not null 
-      order by op.id_hr_operation desc 
+             left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
+             left join departments d on d.id_department = op.id_department and d.deleted_at is null
+             left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
+             left join positions p on p.id_position = op.id_position and p.deleted_at is null
+      where op.deleted_at is not null
+      order by op.id_hr_operation desc
     `;
 
     const result: QueryResult<HrOperation> = await this.pgPool.query(query);
@@ -80,10 +80,10 @@ export class HrOperationsService {
         d.name as department_name,
         p.name as position_name
       from hr_operations op
-      left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
-      left join departments d on d.id_department = op.id_department and d.deleted_at is null
-      left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
-      left join positions p on p.id_position = op.id_position and p.deleted_at is null
+             left join employees e on e.id_employee = op.id_employee and e.deleted_at is null
+             left join departments d on d.id_department = op.id_department and d.deleted_at is null
+             left join organizations o on o.id_organization = d.id_organization and o.deleted_at is null
+             left join positions p on p.id_position = op.id_position and p.deleted_at is null
       where op.id_hr_operation = $1
     `;
 
@@ -93,13 +93,16 @@ export class HrOperationsService {
     return result.rows[0] ?? null;
   }
 
-  async create(data: {
-    id_employee: number;
-    id_department: number;
-    id_position: number;
-    salary: number;
-    is_active?: boolean;
-  }): Promise<HrOperation> {
+  async create(
+    data: {
+      id_employee: number;
+      id_department: number;
+      id_position: number;
+      salary: number;
+      is_active?: boolean;
+    },
+    id_user: number,
+  ): Promise<HrOperation> {
     const result: QueryResult<HrOperation> = await this.pgPool.query(
       `insert into hr_operations (id_employee, id_department, id_position, salary, is_active, created_at, updated_at)
        values ($1, $2, $3, $4, $5, now(), now()) returning *`,
@@ -116,6 +119,7 @@ export class HrOperationsService {
       entity: 'hr_operation',
       oldRow: {} as HrOperation,
       newRow: created,
+      id_user,
     });
     return created;
   }
@@ -128,6 +132,7 @@ export class HrOperationsService {
       salary?: number;
       is_active?: boolean;
     },
+    id_user: number,
   ): Promise<HrOperation | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
@@ -140,7 +145,7 @@ export class HrOperationsService {
            is_active = coalesce($5, is_active),
            updated_at = now()
        where id_hr_operation = $1
-       returning *`,
+         returning *`,
       [id, data.id_department, data.id_position, data.salary, data.is_active],
     );
     const newRow = result.rows[0];
@@ -149,12 +154,13 @@ export class HrOperationsService {
         entity: 'hr_operation',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async delete(id: number): Promise<HrOperation | null> {
+  async delete(id: number, id_user: number): Promise<HrOperation | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -168,12 +174,13 @@ export class HrOperationsService {
         entity: 'hr_operation',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;
   }
 
-  async restore(id: number): Promise<HrOperation | null> {
+  async restore(id: number, id_user: number): Promise<HrOperation | null> {
     const oldRow = await this.getById(id);
     if (!oldRow) return null;
 
@@ -187,6 +194,7 @@ export class HrOperationsService {
         entity: 'hr_operation',
         oldRow,
         newRow,
+        id_user,
       });
     }
     return newRow ?? null;

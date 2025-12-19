@@ -8,11 +8,14 @@ import {
   Body,
   BadRequestException,
   InternalServerErrorException,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService, User } from './users.service';
 import { validateUser, validatePassword } from '../validation';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('users')
+@UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
