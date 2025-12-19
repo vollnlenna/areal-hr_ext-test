@@ -37,3 +37,10 @@
     <a href="http://localhost" target="_blank">http://localhost</a>
   </li>
 </ol>
+<div>
+  <h2>Тестовые данные для входа в систему</h2>
+  <ul>
+    <li><strong>Администратор</strong>: логин <code>admin</code>, пароль <code>admin123</code></li>
+    <li><strong>Менеджер по персоналу</strong>: логин <code>manager</code>, пароль <code>manager123</code></li>
+  </ul>
+</div>
