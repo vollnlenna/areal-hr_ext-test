@@ -11,8 +11,8 @@ import {
 import { PassportScansService, PassportScan } from './passport-scans.service';
 import { AuthGuard } from '../auth/auth.guard';
 
-@Controller('passport-scans')
 @UseGuards(AuthGuard)
+@Controller('passport-scans')
 export class PassportScansController {
   constructor(private readonly passportScansService: PassportScansService) {}
 

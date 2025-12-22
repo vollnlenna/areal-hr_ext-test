@@ -21,8 +21,8 @@ import { join } from 'path';
 import * as fs from 'fs';
 import { AuthGuard } from '../auth/auth.guard';
 
-@Controller('files')
 @UseGuards(AuthGuard)
+@Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 

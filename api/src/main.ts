@@ -12,7 +12,12 @@ async function bootstrap() {
 
   app.set('trust proxy', 1);
 
-  const config = app.get<ConfigService>(ConfigService);
+  const config = app.get(ConfigService);
+
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   const redisClient = createClient({
     socket: {
@@ -22,19 +27,10 @@ async function bootstrap() {
   });
   await redisClient.connect();
 
-  const store = new RedisStore({
-    client: redisClient,
-    disableTouch: false,
-  });
-
-  const secret = config.get<string>('SESSION_SECRET');
-  if (!secret) {
-    throw new Error('SESSION_SECRET is not set');
-  }
   app.use(
     session({
-      store,
-      secret,
+      store: new RedisStore({ client: redisClient }),
+      secret: config.get<string>('SESSION_SECRET')!,
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -45,10 +41,10 @@ async function bootstrap() {
       },
     }),
   );
+
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const port = Number(config.get<string>('API_PORT'));
-  await app.listen(port);
+  await app.listen(Number(config.get('API_PORT')));
 }
 void bootstrap();

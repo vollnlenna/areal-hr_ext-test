@@ -29,9 +29,23 @@ export class AuthController {
     return new Promise((resolve, reject) => {
       req.logout((err) => {
         if (err) {
-          return reject(new Error('Ошибка при выходе из системы'));
+          return reject(
+            err instanceof Error
+              ? err
+              : new Error('Ошибка при выходе из системы'),
+          );
         }
-        resolve({ success: true });
+        req.session.destroy((destroyErr) => {
+          if (destroyErr) {
+            return reject(
+              destroyErr instanceof Error
+                ? destroyErr
+                : new Error('Ошибка при уничтожении сессии'),
+            );
+          }
+          req.res?.clearCookie('connect.sid');
+          resolve({ success: true });
+        });
       });
     });
   }

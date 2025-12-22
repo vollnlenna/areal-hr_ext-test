@@ -66,11 +66,14 @@ services:
     container_name: redis
     ports:
       - "${REDIS_PORT}:6379"
+    volumes:
+      - redisdata:/data
     networks:
       - default
 
 volumes:
   pgdata:
+  redisdata:
 
 networks:
   default:

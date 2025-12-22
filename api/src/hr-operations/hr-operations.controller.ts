@@ -16,8 +16,8 @@ import type { Request } from 'express';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 
-@Controller('hr-operations')
 @UseGuards(AuthGuard)
+@Controller('hr-operations')
 export class HrOperationsController {
   constructor(private readonly hrOperationsService: HrOperationsService) {}
 

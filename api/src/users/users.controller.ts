@@ -9,13 +9,16 @@ import {
   BadRequestException,
   InternalServerErrorException,
   UseGuards,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService, User } from './users.service';
 import { validateUser, validatePassword } from '../validation';
 import { AuthGuard } from '../auth/auth.guard';
+import type { Request } from 'express';
 
-@Controller('users')
 @UseGuards(AuthGuard)
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -65,8 +68,16 @@ export class UsersController {
     }
   }
 
+  private checkAdmin(req: Request) {
+    const user = req.user as User | undefined;
+    if (!user || user.id_role !== 1) {
+      throw new ForbiddenException('Доступ только для администратора');
+    }
+  }
+
   @Post()
   async create(
+    @Req() req: Request,
     @Body()
     data: {
       last_name: string;
@@ -77,6 +88,7 @@ export class UsersController {
       id_role: number;
     },
   ): Promise<User> {
+    this.checkAdmin(req);
     const { password, ...userData } = data;
     const userValidation = validateUser.validate(userData);
     if (userValidation.error)
@@ -99,6 +111,7 @@ export class UsersController {
 
   @Patch(':id')
   async update(
+    @Req() req: Request,
     @Param('id') id: number,
     @Body()
     data: {
@@ -109,6 +122,7 @@ export class UsersController {
       id_role?: number;
     },
   ): Promise<User | null> {
+    this.checkAdmin(req);
     const { error } = validateUser.validate(data);
     if (error) throw new BadRequestException(error.message);
 
@@ -123,9 +137,11 @@ export class UsersController {
 
   @Patch(':id/password')
   async updatePassword(
+    @Req() req: Request,
     @Param('id') id: number,
     @Body() body: { password: string },
   ): Promise<{ success: boolean }> {
+    this.checkAdmin(req);
     const { error } = validatePassword.validate(body);
     if (error) throw new BadRequestException(error.message);
 
@@ -140,7 +156,11 @@ export class UsersController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number): Promise<User | null> {
+  async delete(
+    @Req() req: Request,
+    @Param('id') id: number,
+  ): Promise<User | null> {
+    this.checkAdmin(req);
     try {
       return await this.usersService.delete(id);
     } catch {
@@ -151,7 +171,11 @@ export class UsersController {
   }
 
   @Patch('restore/:id')
-  async restore(@Param('id') id: number): Promise<User | null> {
+  async restore(
+    @Req() req: Request,
+    @Param('id') id: number,
+  ): Promise<User | null> {
+    this.checkAdmin(req);
     try {
       return await this.usersService.restore(id);
     } catch {

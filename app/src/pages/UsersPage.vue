@@ -62,11 +62,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth' // твой useAuth
 import UserCard from '../components/cards/UserCard.vue'
 import UserModal from '../components/modals/UserModal.vue'
 import PasswordModal from '../components/modals/PasswordModal.vue'
 import { useUsers } from '../composables/useUsers'
 import type { User, UserSave } from '../entities/user'
+
+const router = useRouter()
+const auth = useAuth()
 
 const {
   actualList,
@@ -140,6 +145,10 @@ async function saveForm(payload: UserSave) {
 
 async function deleteRow(row: User) {
   await deleteUser(row.id_user)
+  if (auth.currentUser.value?.id_user === row.id_user) {
+    await auth.logout()
+    await router.push('/login')
+  }
 }
 
 async function restoreRow(row: User) {

@@ -1,8 +1,9 @@
 <template>
-  <div v-if="$route.path === '/login'">
-    <router-view />
+  <div v-if="initializing" class="loader">
+    Загрузка...
   </div>
-  <div v-else-if="!initializing" class="container">
+
+  <div v-else class="container">
     <nav v-if="isAuthenticated">
       <button class="tab logout" @click="handleLogout">Выход</button>
       <router-link to="/organizations" class="tab" :class="{ active: $route.path === '/organizations' }">Организации</router-link>
@@ -15,18 +16,15 @@
     </nav>
     <router-view />
   </div>
-
-  <div v-else class="loader">
-    Загрузка...
-  </div>
 </template>
 
 <script setup lang="ts">
 import { useAuth } from './composables/useAuth';
 import { useRouter } from 'vue-router';
 
-const { isAuthenticated, isAdmin, logout, initializing } = useAuth();
+const auth = useAuth();
 const router = useRouter();
+const { isAuthenticated, isAdmin, logout, initializing } = auth;
 
 async function handleLogout() {
   await logout();

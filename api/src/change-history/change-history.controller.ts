@@ -8,8 +8,8 @@ import { ChangeHistoryService, ChangeHistory } from './change-history.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 
-@Controller('change-history')
 @UseGuards(AuthGuard)
+@Controller('change-history')
 export class ChangeHistoryController {
   constructor(private readonly changeHistoryService: ChangeHistoryService) {}
 

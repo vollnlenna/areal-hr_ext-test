@@ -16,8 +16,8 @@ import { OrganizationsService } from './organizations.service';
 import { validateOrganization } from '../validation';
 import { AuthGuard } from '../auth/auth.guard';
 
-@Controller('organizations')
 @UseGuards(AuthGuard)
+@Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 

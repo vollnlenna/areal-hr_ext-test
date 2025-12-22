@@ -17,7 +17,7 @@ export class SessionSerializer extends PassportSerializer {
     try {
       const user = await this.usersService.getById(id);
       if (!user) {
-        return done(new Error('Пользователь не найден'), null);
+        return done(null, false);
       }
       done(null, user);
     } catch {
